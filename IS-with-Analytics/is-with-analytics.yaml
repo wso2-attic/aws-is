@@ -359,6 +359,7 @@ Resources:
             - sed -i '/\[master\]/a autosign=true' /etc/puppet/puppet.conf
             - service puppetmaster restart
             - !Sub "./home/ubuntu/is-init.sh ${WUMUsername} ${WUMPassword}"
+            - !Sub "./home/ubuntu/is-analytics-init.sh ${WUMUsername} ${WUMPassword}"
             - !Join
               - ''
               - - sed -i "s/access-key/
