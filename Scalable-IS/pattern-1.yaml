@@ -10,6 +10,7 @@ Metadata:
           - AWSAccessKeyId
           - AWSAccessKeySecret
           - KeyPairName
+          - WSO2InstanceType
       - Label:
           default: Network Configurations
         Parameters:
