@@ -799,9 +799,11 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: '4000'
-          ToPort: '4000'
+          FromPort: '4040'
+          ToPort: '4040'
           SourceSecurityGroupId: !Ref WSO2ISAnalyticsLoadBalancerSecurityGroup
         - IpProtocol: tcp
           FromPort: '8140'
@@ -1207,8 +1209,8 @@ Resources:
           InstanceProtocol: HTTP
           PolicyNames:
             - LBStickyPolicy
-        - LoadBalancerPort: '4000'
-          InstancePort: '4000'
+        - LoadBalancerPort: '4040'
+          InstancePort: '4040'
           Protocol: HTTP
           InstanceProtocol: HTTP
           PolicyNames:
@@ -1262,6 +1264,15 @@ Outputs:
           - DNSName
         - ':9443/carbon'
     Description: Identity Server Analytics Management Console URL
+  SparkUIURL:
+    Value: !Join
+      - ''
+      - - 'http://'
+        - !GetAtt
+          - WSO2ISAnalyticsLoadBalancer
+          - DNSName
+        - ':4040/jobs'
+    Description: Spark UI
 Parameters:
   AWSAccessKeyId:
     Description: >-
@@ -1362,7 +1373,7 @@ Mappings:
     eu-west-2:
       Ubuntu140464bit: ami-to-be-added
     us-east-1:
-      Ubuntu140464bit: ami-0125bfcdceda1861c
+      Ubuntu140464bit: ami-05a04247c6a5355b5
     us-east-2:
       Ubuntu140464bit: ami-to-be-added
     us-west-1:
