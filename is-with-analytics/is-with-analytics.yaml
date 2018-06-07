@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  WSO2 Identity Server deployment with Clustering
+  WSO2 Identity Server deployment with Analytics
 Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
@@ -10,6 +10,7 @@ Metadata:
           - AWSAccessKeyId
           - AWSAccessKeySecret
           - KeyPairName
+          - WSO2InstanceType
       - Label:
           default: Network Configurations
         Parameters:
@@ -189,6 +190,23 @@ Resources:
       MultiAZ: 'true'
       StorageType: gp2
       DBSubnetGroupName: !Ref WSO2ISDBSubnetGroup
+  WSO2ISAnalyticsDBInstance:
+    Type: 'AWS::RDS::DBInstance'
+    DeletionPolicy: Delete
+    Properties:
+      VPCSecurityGroups:
+        - !Ref WSO2ISDBInstanceSecurityGroup
+      DBInstanceClass: db.t2.medium
+      AllocatedStorage: 5
+      BackupRetentionPeriod: '0'
+      DBInstanceIdentifier: WSO2ISAnalyticsDBInstance
+      DBName: WSO2_IS_ANALYTICS_DB
+      Engine: MySQL
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      MultiAZ: 'true'
+      StorageType: gp2
+      DBSubnetGroupName: !Ref WSO2ISDBSubnetGroup
   WSO2ISDBSubnetGroup:
     Type: 'AWS::RDS::DBSubnetGroup'
     Properties:
@@ -211,6 +229,10 @@ Resources:
     Type: 'AWS::EFS::FileSystem'
     Properties:
       PerformanceMode: generalPurpose
+  WSO2ISAnalyticsEFSFileSystem:
+    Type: 'AWS::EFS::FileSystem'
+    Properties:
+      PerformanceMode: generalPurpose
   WSO2ISPrivateSubnet1EFSMountTarget:
     Type: 'AWS::EFS::MountTarget'
     Properties:
@@ -225,12 +247,19 @@ Resources:
       FileSystemId: !Ref WSO2ISEFSFileSystem
       SecurityGroups:
         - !Ref WSO2ISEFSSecurityGroup
+  WSO2ISAnalyticsPrivateSubnet1EFSMountTarget:
+    Type: 'AWS::EFS::MountTarget'
+    Properties:
+      SubnetId: !Ref WSO2ISPrivateSubnet1
+      FileSystemId: !Ref WSO2ISAnalyticsEFSFileSystem
+      SecurityGroups:
+        - !Ref WSO2ISEFSSecurityGroup
   # Product configurations
   BastionSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
       VpcId: !Ref WSO2ISVPC
-      GroupDescription: WSO2 Bastion node Security Group
+      GroupDescription: WSO2 Bastion Node Security Group
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -240,8 +269,8 @@ Resources:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
       VpcId: !Ref WSO2ISVPC
-      GroupDescription: WSO2 Identity Manager Security Group
       GroupName: WSO2SecurityGroup
+      GroupDescription: WSO2 Identity Server Security Group
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22
@@ -268,12 +297,12 @@ Resources:
           ToPort: '5672'
           SourceSecurityGroupId: !Ref WSO2ISLoadBalancerSecurityGroup
         - IpProtocol: tcp
-          FromPort: '5701'
-          ToPort: '5701'
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
           FromPort: '8140'
           ToPort: '8140'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '5701'
+          ToPort: '5701'
           CidrIp: 0.0.0.0/0
   WSO2BastionInstance:
     Type: 'AWS::EC2::Instance'
@@ -338,6 +367,18 @@ Resources:
                 - /g" /etc/puppet/hieradata/dev/wso2/wso2is/pattern-2/default.yaml
             - !Join
               - ''
+              - - sed -i "s/access-key/
+                - !Ref AWSAccessKeyId
+                - /g" /etc/puppet/hieradata/dev/wso2/wso2is_analytics/pattern-1/default.yaml
+            - !Join
+              - ''
+              - - sed -i "s/CF_ANALYTICS_DB_HOST/
+                - !GetAtt
+                  - WSO2ISAnalyticsDBInstance
+                  - Endpoint.Address
+                - /g" /etc/puppet/hieradata/dev/wso2/wso2is_analytics/pattern-1/default.yaml
+            - !Join
+              - ''
               - - sed -i "s/CF_ELB_DNS_NAME/
                 - !GetAtt
                   - WSO2ISLoadBalancer
@@ -345,6 +386,15 @@ Resources:
                 - >-
                   /g"
                   /etc/puppet/hieradata/dev/wso2/wso2is/pattern-2/default.yaml
+            - !Join
+              - ''
+              - - sed -i "s/CF_ANALYTICS_ELB_DNS_NAME/
+                - !GetAtt
+                  - WSO2ISAnalyticsLoadBalancer
+                  - DNSName
+                - >-
+                  /g"
+                  /etc/puppet/hieradata/dev/wso2/wso2is_analytics/pattern-1/default.yaml
             - !Join
               - ''
               - - sed -i "s/CF_DB_USERNAME/
@@ -372,6 +422,11 @@ Resources:
               - - sed -i "s^secretkey^
                 - !Ref AWSAccessKeySecret
                 - ^g" /etc/puppet/hieradata/dev/wso2/wso2is/pattern-2/default.yaml
+            - !Join
+              - ''
+              - - sed -i "s^secretkey^
+                - !Ref AWSAccessKeySecret
+                - ^g" /etc/puppet/hieradata/dev/wso2/wso2is_analytics/pattern-1/default.yaml
   PuppetMasterSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -492,38 +547,43 @@ Resources:
             - >-
               ln -s /mnt/efs/tenants
               /mnt/wso2is-5.5.0/repository/tenants
+            - apt-get install -y python3-pip
+            - pip3 install boto3
+            - !Sub "ANALYTICS_PRIVATE_IP=$(python3 /usr/local/bin/private_ip_extractor.py ${AWS::Region} ${AWSAccessKeyId} ${AWSAccessKeySecret} WSO2ISAnalyticsInstance1)"
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
-                - 'localhost'
+                - $ANALYTICS_PRIVATE_IP
                 - >-
                   /g"
                   /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-RoleData.xml
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
-                - 'localhost'
+                - $ANALYTICS_PRIVATE_IP
                 - >-
                   /g"
                   /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-AuthenticationData.xml
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
-                - 'localhost'
+                - $ANALYTICS_PRIVATE_IP
                 - >-
                   /g"
                   /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-SessionData.xml
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
-                - 'localhost'
+                - $ANALYTICS_PRIVATE_IP
                 - >-
                   /g"
                   /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-UserData.xml
             - /mnt/wso2is-5.5.0/bin/wso2server.sh start
+            - mkdir -p /home/ubuntu/final
             - echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
             - cat /dev/null > ~/.bash_history && history -c
     DependsOn:
+      - WSO2ISAnalyticsNode1AutoScalingGroup
       - WSO2ISSecurityGroup
       - WSO2ISLoadBalancer
       - WSO2ISVPCInternetGatewayAttachment
@@ -656,38 +716,52 @@ Resources:
             - >-
               ln -s /mnt/efs/tenants
               /mnt/wso2is-5.5.0/repository/tenants
+            - apt-get install -y python3-pip
+            - pip3 install boto3
+            - !Sub "PRIVATE_IP=$(python3 /usr/local/bin/private_ip_extractor.py ${AWS::Region} ${AWSAccessKeyId} ${AWSAccessKeySecret} WSO2ISInstance2)"
+            - !Sub "ANALYTICS_PRIVATE_IP=$(python3 /usr/local/bin/private_ip_extractor.py ${AWS::Region} ${AWSAccessKeyId} ${AWSAccessKeySecret} WSO2ISAnalyticsInstance2)"
+            - !Join
+              - ''
+              - - sed -i "s/LOCAL_MEMBER_HOST/
+                - $PRIVATE_IP
+                - >-
+                  /g"
+                  /mnt/wso2is-5.5.0/repository/conf/axis2/axis2.xml
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
-                - 'localhost'
+                - $ANALYTICS_PRIVATE_IP
                 - >-
                   /g"
                   /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-RoleData.xml
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
-                - 'localhost'
+                - $ANALYTICS_PRIVATE_IP
                 - >-
                   /g"
                   /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-AuthenticationData.xml
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
-                - 'localhost'
+                - $ANALYTICS_PRIVATE_IP
                 - >-
                   /g"
                   /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-SessionData.xml
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
-                - 'localhost'
+                - $ANALYTICS_PRIVATE_IP
                 - >-
                   /g"
                   /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-UserData.xml
             - /mnt/wso2is-5.5.0/bin/wso2server.sh start
+            - mkdir -p /home/ubuntu/final
             - echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
             - cat /dev/null > ~/.bash_history && history -c
     DependsOn:
+      - WSO2ISNode1LaunchConfiguration
+      - WSO2ISAnalyticsNode2AutoScalingGroup
       - WSO2ISSecurityGroup
       - WSO2ISLoadBalancer
       - WSO2ISVPCInternetGatewayAttachment
@@ -703,7 +777,7 @@ Resources:
       LoadBalancerNames:
         - !Ref WSO2ISLoadBalancer
       VPCZoneIdentifier:
-        - !Ref WSO2ISPrivateSubnet1
+        - !Ref WSO2ISPrivateSubnet2
       Tags:
         - Key: Name
           Value: WSO2ISInstance2
@@ -714,6 +788,241 @@ Resources:
     DependsOn:
       - WSO2ISLoadBalancer
       - WSO2ISNode2LaunchConfiguration
+  WSO2ISAnalyticsSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref WSO2ISVPC
+      GroupName: WSO2AnalyticsSecurityGroup
+      GroupDescription: WSO2 Identity Server Analytics Security Group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '4040'
+          ToPort: '4040'
+          SourceSecurityGroupId: !Ref WSO2ISAnalyticsLoadBalancerSecurityGroup
+        - IpProtocol: tcp
+          FromPort: '8140'
+          ToPort: '8140'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '5701'
+          ToPort: '5701'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '9763'
+          ToPort: '9763'
+          SourceSecurityGroupId: !Ref WSO2ISAnalyticsLoadBalancerSecurityGroup
+        - IpProtocol: tcp
+          FromPort: '9443'
+          ToPort: '9443'
+          SourceSecurityGroupId: !Ref WSO2ISAnalyticsLoadBalancerSecurityGroup
+        - IpProtocol: tcp
+          FromPort: '7611'
+          ToPort: '7611'
+          SourceSecurityGroupId: !Ref WSO2ISSecurityGroup
+        - IpProtocol: tcp
+          FromPort: '7711'
+          ToPort: '7711'
+          SourceSecurityGroupId: !Ref WSO2ISSecurityGroup
+  WSO2ISAnalyticsNode1LaunchConfiguration:
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap
+        - WSO2ISAnalyticsAMIRegionMap
+        - !Ref 'AWS::Region'
+        - Ubuntu140464bit
+      InstanceType: !Ref WSO2InstanceType
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: '20'
+            VolumeType: gp2
+            DeleteOnTermination: 'true'
+      KeyName: !Ref KeyPairName
+      SecurityGroups:
+        - !Ref WSO2ISAnalyticsSecurityGroup
+      UserData: !Base64
+        'Fn::Join':
+          - |+
+
+          - - '#!/bin/bash'
+            - 'export PATH=~/.local/bin:$PATH'
+            - apt-get update
+            - sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
+            - export DB_NAME=WSO2_IS_ANALYTICS_DB
+            - !Join
+              - ''
+              - - export PuppetmasterIP=
+                - !GetAtt
+                  - PuppetMaster
+                  - PrivateIp
+            - echo "${PuppetmasterIP} puppet puppetmaster" >> /etc/hosts
+            - !Sub "./home/ubuntu/set_jdk.sh ${JDK}"
+            - !Join
+              - ''
+              - - sed -i "s/CF_DB_USERNAME/
+                - !Ref DBUsername
+                - /g" /usr/local/bin/provision_db_analytics.sh
+            - !Join
+              - ''
+              - - sed -i "s/CF_DB_PASSWORD/
+                - !Ref DBPassword
+                - /g" /usr/local/bin/provision_db_analytics.sh
+            - !Join
+              - ''
+              - - sed -i "s/CF_DB_HOST/
+                - !GetAtt
+                  - WSO2ISAnalyticsDBInstance
+                  - Endpoint.Address
+                - /g" /usr/local/bin/provision_db_analytics.sh
+            - !Join
+              - ''
+              - - sed -i "s/CF_DB_PORT/
+                - !GetAtt
+                  - WSO2ISDBInstance
+                  - Endpoint.Port
+                - /g" /usr/local/bin/provision_db_analytics.sh
+            - sleep 400
+            - sudo /opt/setup.sh start
+            - sleep 30
+            - bash /usr/local/bin/provision_db_analytics.sh
+            - sleep 10
+            - !Join
+              - ''
+              - - sed -i "s/LOCAL_MEMBER_HOST/
+                - $PRIVATE_IP
+                - >-
+                  /g"
+                  /mnt/wso2is-analytics-5.5.0/repository/conf/axis2/axis2.xml
+            - /mnt/wso2is-analytics-5.5.0/bin/wso2server.sh start
+            - echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
+            - cat /dev/null > ~/.bash_history && history -c
+    DependsOn:
+      - WSO2ISAnalyticsSecurityGroup
+      - WSO2ISAnalyticsLoadBalancer
+      - WSO2ISVPCInternetGatewayAttachment
+      - WSO2ISDBInstance
+      - PuppetMaster
+  WSO2ISAnalyticsNode1AutoScalingGroup:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LaunchConfigurationName: !Ref WSO2ISAnalyticsNode1LaunchConfiguration
+      DesiredCapacity: 1
+      MinSize: 1
+      MaxSize: 1
+      LoadBalancerNames:
+        - !Ref WSO2ISAnalyticsLoadBalancer
+      VPCZoneIdentifier:
+        - !Ref WSO2ISPrivateSubnet1
+      Tags:
+        - Key: Name
+          Value: WSO2ISAnalyticsInstance1
+          PropagateAtLaunch: 'true'
+        - Key: cluster
+          Value: is
+          PropagateAtLaunch: 'true'
+    DependsOn:
+      - WSO2ISAnalyticsLoadBalancer
+      - WSO2ISAnalyticsNode1LaunchConfiguration
+  WSO2ISAnalyticsNode2LaunchConfiguration:
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: !FindInMap
+        - WSO2ISAnalyticsAMIRegionMap
+        - !Ref 'AWS::Region'
+        - Ubuntu140464bit
+      InstanceType: !Ref WSO2InstanceType
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: '20'
+            VolumeType: gp2
+            DeleteOnTermination: 'true'
+      KeyName: !Ref KeyPairName
+      SecurityGroups:
+        - !Ref WSO2ISAnalyticsSecurityGroup
+      UserData: !Base64
+        'Fn::Join':
+          - |+
+
+          - - '#!/bin/bash'
+            - 'export PATH=~/.local/bin:$PATH'
+            - apt-get update
+            - sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
+            - export DB_NAME=WSO2_IS_ANALYTICS_DB
+            - !Join
+              - ''
+              - - export PuppetmasterIP=
+                - !GetAtt
+                  - PuppetMaster
+                  - PrivateIp
+            - echo "${PuppetmasterIP} puppet puppetmaster" >> /etc/hosts
+            - !Sub "./home/ubuntu/set_jdk.sh ${JDK}"
+            - !Join
+              - ''
+              - - sed -i "s/CF_DB_USERNAME/
+                - !Ref DBUsername
+                - /g" /usr/local/bin/provision_db_analytics.sh
+            - !Join
+              - ''
+              - - sed -i "s/CF_DB_PASSWORD/
+                - !Ref DBPassword
+                - /g" /usr/local/bin/provision_db_analytics.sh
+            - !Join
+              - ''
+              - - sed -i "s/CF_DB_HOST/
+                - !GetAtt
+                  - WSO2ISAnalyticsDBInstance
+                  - Endpoint.Address
+                - /g" /usr/local/bin/provision_db_analytics.sh
+            - !Join
+              - ''
+              - - sed -i "s/CF_DB_PORT/
+                - !GetAtt
+                  - WSO2ISDBInstance
+                  - Endpoint.Port
+                - /g" /usr/local/bin/provision_db_analytics.sh
+            - sleep 400
+            - sudo /opt/setup.sh start
+            - sleep 30
+            - bash /usr/local/bin/provision_db_analytics.sh
+            - sleep 10
+            - /mnt/wso2is-analytics-5.5.0/bin/wso2server.sh start
+            - echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
+            - cat /dev/null > ~/.bash_history && history -c
+    DependsOn:
+      - WSO2ISAnalyticsNode1LaunchConfiguration
+      - WSO2ISAnalyticsSecurityGroup
+      - WSO2ISAnalyticsLoadBalancer
+      - WSO2ISVPCInternetGatewayAttachment
+      - WSO2ISDBInstance
+      - PuppetMaster
+  WSO2ISAnalyticsNode2AutoScalingGroup:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      LaunchConfigurationName: !Ref WSO2ISAnalyticsNode2LaunchConfiguration
+      DesiredCapacity: 1
+      MinSize: 1
+      MaxSize: 1
+      LoadBalancerNames:
+        - !Ref WSO2ISAnalyticsLoadBalancer
+      VPCZoneIdentifier:
+        - !Ref WSO2ISPrivateSubnet2
+      Tags:
+        - Key: Name
+          Value: WSO2ISAnalyticsInstance2
+          PropagateAtLaunch: 'true'
+        - Key: cluster
+          Value: is
+          PropagateAtLaunch: 'true'
+    DependsOn:
+      - WSO2ISAnalyticsLoadBalancer
+      - WSO2ISAnalyticsNode2LaunchConfiguration
   WSO2ISLoadBalancerSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -827,7 +1136,116 @@ Resources:
           Timeout: '5'
     DependsOn:
       - WSO2ISLoadBalancerSecurityGroup
+  WSO2ISAnalyticsLoadBalancerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref WSO2ISVPC
+      GroupDescription: WSO2 IS Analytics ELB Security Group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '9763'
+          ToPort: '9763'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '9443'
+          ToPort: '9443'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '4040'
+          ToPort: '4040'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '5701'
+          ToPort: '5701'
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: '9763'
+          ToPort: '9763'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '9443'
+          ToPort: '9443'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '4040'
+          ToPort: '4040'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '5701'
+          ToPort: '5701'
+          CidrIp: 0.0.0.0/0
+  WSO2ISAnalyticsLoadBalancer:
+    Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
+    Properties:
+      CrossZone: true
+      SecurityGroups:
+        - !Ref WSO2ISAnalyticsLoadBalancerSecurityGroup
+      Subnets:
+        - !Ref WSO2ISPublicSubnet2
+        - !Ref WSO2ISPublicSubnet1
+      LBCookieStickinessPolicy:
+        - PolicyName: LBStickyPolicy
+      Listeners:
+        - LoadBalancerPort: '9763'
+          InstancePort: '9763'
+          Protocol: HTTP
+          InstanceProtocol: HTTP
+          PolicyNames:
+            - LBStickyPolicy
+        - LoadBalancerPort: '4040'
+          InstancePort: '4040'
+          Protocol: HTTP
+          InstanceProtocol: HTTP
+          PolicyNames:
+            - LBStickyPolicy
+        - LoadBalancerPort: '9443'
+          InstancePort: '9443'
+          Protocol: HTTPS
+          InstanceProtocol: HTTPS
+          PolicyNames:
+            - LBStickyPolicy
+          SSLCertificateId: !Join
+            - ''
+            - - 'arn:aws:iam::'
+              - !Ref 'AWS::AccountId'
+              - ':server-certificate'
+              - /
+              - !Ref CertificateName
+      HealthCheck:
+          Target: 'TCP:9763'
+          HealthyThreshold: '3'
+          UnhealthyThreshold: '5'
+          Interval: '10'
+          Timeout: '5'
+    DependsOn:
+      - WSO2ISAnalyticsLoadBalancerSecurityGroup
 Outputs:
+  ISPortalURL:
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !GetAtt
+          - WSO2ISAnalyticsLoadBalancer
+          - DNSName
+        - ':9443/portal'
+    Description: Identity Server Analytics Dashboard
   ISCarbonURL:
     Value: !Join
       - ''
@@ -837,6 +1255,24 @@ Outputs:
           - DNSName
         - ':9443/carbon'
     Description: Identity Server Management Console URL
+  ISAnalyticsURL:
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !GetAtt
+          - WSO2ISAnalyticsLoadBalancer
+          - DNSName
+        - ':9443/carbon'
+    Description: Identity Server Analytics Management Console URL
+  SparkUIURL:
+    Value: !Join
+      - ''
+      - - 'http://'
+        - !GetAtt
+          - WSO2ISAnalyticsLoadBalancer
+          - DNSName
+        - ':4040/jobs'
+    Description: Spark UI
 Parameters:
   AWSAccessKeyId:
     Description: >-
@@ -904,13 +1340,13 @@ Parameters:
     Default: ""
     Description: Enter WUM user name
   DBUsername:
-    Description: The username to be used in the WSO2 IS DB.
+    Description: The username to be used in the WSO2 AM DB.
     Type: String
     Default: root
     MinLength: 4
     AllowedPattern: '[A-Za-z0-9\-]+'
   DBPassword:
-    Description: The password to be used in the WSO2 IS DB.
+    Description: The password to be used in the WSO2 AM DB.
     Type: String
     Default: wso2carbon
     MinLength: 8
@@ -937,7 +1373,7 @@ Mappings:
     eu-west-2:
       Ubuntu140464bit: ami-to-be-added
     us-east-1:
-      Ubuntu140464bit: ami-0125bfcdceda1861c
+      Ubuntu140464bit: ami-05a04247c6a5355b5
     us-east-2:
       Ubuntu140464bit: ami-to-be-added
     us-west-1:
@@ -967,6 +1403,35 @@ Mappings:
       Ubuntu140464bit: ami-to-be-added
     us-east-1:
       Ubuntu140464bit: ami-011a0a4aba1c14e99
+    us-east-2:
+      Ubuntu140464bit: ami-to-be-added
+    us-west-1:
+      Ubuntu140464bit: ami-to-be-added
+    us-west-2:
+      Ubuntu140464bit: ami-to-be-added
+    ca-central-1:
+      Ubuntu140464bit: ami-to-be-added
+    sa-east-1:
+      Ubuntu140464bit: ami-to-be-added
+  WSO2ISAnalyticsAMIRegionMap:
+    ap-northeast-1:
+      Ubuntu140464bit: ami-to-be-added
+    ap-northeast-2:
+      Ubuntu140464bit: ami-to-be-added
+    ap-south-1:
+      Ubuntu140464bit: ami-to-be-added
+    ap-southeast-1:
+      Ubuntu140464bit: ami-to-be-added
+    ap-southeast-2:
+      Ubuntu140464bit: ami-to-be-added
+    eu-central-1:
+      Ubuntu140464bit: ami-to-be-added
+    eu-west-1:
+      Ubuntu140464bit: ami-to-be-added
+    eu-west-2:
+      Ubuntu140464bit: ami-to-be-added
+    us-east-1:
+      Ubuntu140464bit: ami-0ab1e54f223162007
     us-east-2:
       Ubuntu140464bit: ami-to-be-added
     us-west-1:
