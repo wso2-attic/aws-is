@@ -28,7 +28,6 @@ Metadata:
           - JDK
           - WUMUsername
           - WUMPassword
-          - SSHIP
     ParameterLabels:
       AWSAccessKeyId:
         default: AWS Access Key ID
@@ -52,8 +51,8 @@ Metadata:
         default: WUM Username
       WUMPassword:
         default: WUM Password
-      SSHIP:
-        default: IP Used to SSH into Bastion Instance
+      WSO2InstanceType:
+        default: WSO2 Instance Type
 Resources:
   # networking configurations
   WSO2ISVPC:
@@ -1351,9 +1350,6 @@ Parameters:
     Default: wso2carbon
     MinLength: 8
     NoEcho: true
-  SSHIP:
-    Description: IP address of the machine used to SSH into the bastion instance
-    Type: String
 Mappings:
   WSO2PuppetMasterRegionMap:
     ap-northeast-1:
@@ -1373,7 +1369,7 @@ Mappings:
     eu-west-2:
       Ubuntu140464bit: ami-to-be-added
     us-east-1:
-      Ubuntu140464bit: ami-05a04247c6a5355b5
+      Ubuntu140464bit: ami-084564684a318dac9
     us-east-2:
       Ubuntu140464bit: ami-to-be-added
     us-west-1:
