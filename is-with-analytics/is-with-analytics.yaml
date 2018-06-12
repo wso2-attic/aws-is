@@ -1009,7 +1009,7 @@ Resources:
       MinSize: 1
       MaxSize: 1
       LoadBalancerNames:
-        - !Ref WSO2ISAnalyticsLoadBalancer
+        - !Ref WSO2ISAnalyticsLoadBalancer2
       VPCZoneIdentifier:
         - !Ref WSO2ISPrivateSubnet2
       Tags:
@@ -1235,6 +1235,51 @@ Resources:
           Timeout: '5'
     DependsOn:
       - WSO2ISAnalyticsLoadBalancerSecurityGroup
+  WSO2ISAnalyticsLoadBalancer2:
+    Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
+    Properties:
+      CrossZone: true
+      SecurityGroups:
+        - !Ref WSO2ISAnalyticsLoadBalancerSecurityGroup
+      Subnets:
+        - !Ref WSO2ISPublicSubnet2
+        - !Ref WSO2ISPublicSubnet1
+      LBCookieStickinessPolicy:
+        - PolicyName: LBStickyPolicy
+      Listeners:
+        - LoadBalancerPort: '9763'
+          InstancePort: '9763'
+          Protocol: HTTP
+          InstanceProtocol: HTTP
+          PolicyNames:
+            - LBStickyPolicy
+        - LoadBalancerPort: '4040'
+          InstancePort: '4040'
+          Protocol: HTTP
+          InstanceProtocol: HTTP
+          PolicyNames:
+            - LBStickyPolicy
+        - LoadBalancerPort: '9443'
+          InstancePort: '9443'
+          Protocol: HTTPS
+          InstanceProtocol: HTTPS
+          PolicyNames:
+            - LBStickyPolicy
+          SSLCertificateId: !Join
+            - ''
+            - - 'arn:aws:iam::'
+              - !Ref 'AWS::AccountId'
+              - ':server-certificate'
+              - /
+              - !Ref CertificateName
+      HealthCheck:
+          Target: 'TCP:9763'
+          HealthyThreshold: '3'
+          UnhealthyThreshold: '5'
+          Interval: '10'
+          Timeout: '5'
+    DependsOn:
+      - WSO2ISAnalyticsLoadBalancerSecurityGroup
 Outputs:
   ISPortalURL:
     Value: !Join
@@ -1263,7 +1308,7 @@ Outputs:
           - DNSName
         - ':9443/carbon'
     Description: Identity Server Analytics Management Console URL
-  SparkUIURL:
+  SparkUIURL1:
     Value: !Join
       - ''
       - - 'http://'
@@ -1271,7 +1316,16 @@ Outputs:
           - WSO2ISAnalyticsLoadBalancer
           - DNSName
         - ':4040/jobs'
-    Description: Spark UI
+    Description: Spark UI Node 1
+  SparkUIURL2:
+    Value: !Join
+      - ''
+      - - 'http://'
+        - !GetAtt
+          - WSO2ISAnalyticsLoadBalancer2
+          - DNSName
+        - ':4040/jobs'
+    Description: Spark UI Node 2
 Parameters:
   AWSAccessKeyId:
     Description: >-
@@ -1369,7 +1423,7 @@ Mappings:
     eu-west-2:
       Ubuntu140464bit: ami-to-be-added
     us-east-1:
-      Ubuntu140464bit: ami-084564684a318dac9
+      Ubuntu140464bit: ami-07147a213bc5f67a8
     us-east-2:
       Ubuntu140464bit: ami-to-be-added
     us-west-1:
