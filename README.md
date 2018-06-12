@@ -6,8 +6,8 @@ This repository contains CloudFormation templates to deploy WSO2 Identity Server
 
 ## Scalable IS
 
-![pattern1](../images/is-pattern1.png)
+![pattern1](images/is-pattern1.png)
 
 ## Identity Server Configured with Analytics
 
-![pattern2](../images/is-pattern2.png)
+![pattern2](images/is-pattern2.png)
