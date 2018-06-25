@@ -35,7 +35,7 @@ Metadata:
           - DBUsername
           - DBPassword
       - Label:
-          default: WSO2 Subscription Credentials
+          default: WSO2 Credentials
         Parameters:
           - WUMUsername
           - WUMPassword
