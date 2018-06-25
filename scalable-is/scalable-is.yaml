@@ -1,3 +1,17 @@
+# Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   WSO2 Identity Server deployment with Clustering
@@ -20,15 +34,11 @@ Metadata:
         Parameters:
           - DBUsername
           - DBPassword
-          - DBEngine
-          - DBEngineVersion
       - Label:
-          default: Other Configurations
+          default: WSO2 Credentials
         Parameters:
-          - JDK
           - WUMUsername
           - WUMPassword
-          - SSHIP
     ParameterLabels:
       AWSAccessKeyId:
         default: AWS Access Key ID
@@ -39,21 +49,17 @@ Metadata:
       KeyPairName:
         default: Key Pair Name
       DBUsername:
-        default: Database Master Username
+        default: Database Username
       DBPassword:
-        default: Database Master Password
-      DBEngine:
-        default: Database Engine
-      DBEngineVersion:
-        default: Database Engine Version
+        default: Database Password
       JDK:
         default: JDK Version
       WUMUsername:
-        default: WUM Username
+        default: WSO2 Username
       WUMPassword:
-        default: WUM Password
-      SSHIP:
-        default: IP Used to SSH into Bastion Instance
+        default: WSO2 Password
+      WSO2InstanceType:
+        default: EC2 Instance Type
 Resources:
   # networking configurations
   WSO2ISVPC:
@@ -281,7 +287,10 @@ Resources:
     Properties:
       DisableApiTermination: 'false'
       InstanceInitiatedShutdownBehavior: stop
-      ImageId: ami-075f715f2a2357254
+      ImageId: !FindInMap
+        - WSO2ISAMIRegionMap
+        - !Ref 'AWS::Region'
+        - Ubuntu140464bit
       InstanceType: t2.micro
       KeyName: !Ref KeyPairName
       Monitoring: 'false'
@@ -331,11 +340,15 @@ Resources:
             - sed -i '/\[master\]/a autosign=true' /etc/puppet/puppet.conf
             - service puppetmaster restart
             - !Sub "./home/ubuntu/is-init.sh ${WUMUsername} ${WUMPassword}"
-            - !Sub "./home/ubuntu/is-analytics-init.sh ${WUMUsername} ${WUMPassword}"
             - !Join
               - ''
               - - sed -i "s/access-key/
                 - !Ref AWSAccessKeyId
+                - /g" /etc/puppet/hieradata/dev/wso2/wso2is/pattern-2/default.yaml
+            - !Join
+              - ''
+              - - sed -i "s/REGION_NAME/
+                - !Ref "AWS::Region"
                 - /g" /etc/puppet/hieradata/dev/wso2/wso2is/pattern-2/default.yaml
             - !Join
               - ''
@@ -359,7 +372,7 @@ Resources:
             - !Join
               - ''
               - - sed -i "s/JDK_VERSION/
-                - !Ref JDK
+                - 'jdk-8u144-linux-x64.tar.gz'
                 - /g" /etc/puppet/hieradata/dev/wso2/common.yaml
             - !Join
               - ''
@@ -420,7 +433,7 @@ Resources:
                   - PuppetMaster
                   - PrivateIp
             - echo "${PuppetmasterIP} puppet puppetmaster" >> /etc/hosts
-            - !Sub "./home/ubuntu/set_jdk.sh ${JDK}"
+            - !Sub "./home/ubuntu/set_jdk.sh jdk-8u144-linux-x64.tar.gz"
             - mkdir -p /mnt/efs
             - !Sub "mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs"
             - export DB_NAME=WSO2_IS_DB
@@ -468,60 +481,60 @@ Resources:
                   - WSO2ISDBInstance
                   - Endpoint.Port
                 - /g" /usr/local/bin/provision_db_is.sh
-            - sleep 400
+            - sleep 350
             - sudo /opt/setup.sh start
             - sleep 30
             - bash /usr/local/bin/provision_db_is.sh
             - sleep 10
             - 'if [ ! -d "/mnt/efs/deployment" ]; then'
             - '    mkdir -p /mnt/efs/deployment'
-            - '    cp -r /mnt/wso2is-5.5.0/repository/deployment/ /mnt/efs'
+            - '    cp -r /mnt/wso2is-5.6.0/repository/deployment/ /mnt/efs'
             - fi
             - >-
               rm -rf
-              /mnt/wso2is-5.5.0/repository/deployment/
+              /mnt/wso2is-5.6.0/repository/deployment/
             - >-
               ln -s /mnt/efs/deployment
-              /mnt/wso2is-5.5.0/repository/deployment
+              /mnt/wso2is-5.6.0/repository/deployment
             - 'if [ ! -d "/mnt/efs/tenants" ]; then'
             - '    mkdir -p /mnt/efs/tenants'
-            - '    cp -r /mnt/wso2is-5.5.0/repository/tenants /mnt/efs'
+            - '    cp -r /mnt/wso2is-5.6.0/repository/tenants /mnt/efs'
             - fi
             - >-
               rm -rf
-              /mnt/wso2is-5.5.0/repository/deployment/tenants
+              /mnt/wso2is-5.6.0/repository/deployment/tenants
             - >-
               ln -s /mnt/efs/tenants
-              /mnt/wso2is-5.5.0/repository/tenants
+              /mnt/wso2is-5.6.0/repository/tenants
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
                 - 'localhost'
                 - >-
                   /g"
-                  /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-RoleData.xml
+                  /mnt/wso2is-5.6.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-RoleData.xml
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
                 - 'localhost'
                 - >-
                   /g"
-                  /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-AuthenticationData.xml
+                  /mnt/wso2is-5.6.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-AuthenticationData.xml
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
                 - 'localhost'
                 - >-
                   /g"
-                  /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-SessionData.xml
+                  /mnt/wso2is-5.6.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-SessionData.xml
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
                 - 'localhost'
                 - >-
                   /g"
-                  /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-UserData.xml
-            - /mnt/wso2is-5.5.0/bin/wso2server.sh start
+                  /mnt/wso2is-5.6.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-UserData.xml
+            - /mnt/wso2is-5.6.0/bin/wso2server.sh start
             - echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
             - cat /dev/null > ~/.bash_history && history -c
     DependsOn:
@@ -584,7 +597,7 @@ Resources:
                   - PuppetMaster
                   - PrivateIp
             - echo "${PuppetmasterIP} puppet puppetmaster" >> /etc/hosts
-            - !Sub "./home/ubuntu/set_jdk.sh ${JDK}"
+            - !Sub "./home/ubuntu/set_jdk.sh jdk-8u144-linux-x64.tar.gz"
             - mkdir -p /mnt/efs
             - !Sub "mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs"
             - export DB_NAME=WSO2_IS_DB
@@ -639,53 +652,53 @@ Resources:
             - sleep 10
             - 'if [ ! -d "/mnt/efs/deployment" ]; then'
             - '    mkdir -p /mnt/efs/deployment'
-            - '    cp -r /mnt/wso2is-5.5.0/repository/deployment/ /mnt/efs'
+            - '    cp -r /mnt/wso2is-5.6.0/repository/deployment/ /mnt/efs'
             - fi
             - >-
               rm -rf
-              /mnt/wso2is-5.5.0/repository/deployment/
+              /mnt/wso2is-5.6.0/repository/deployment/
             - >-
               ln -s /mnt/efs/deployment
-              /mnt/wso2is-5.5.0/repository/deployment
+              /mnt/wso2is-5.6.0/repository/deployment
             - 'if [ ! -d "/mnt/efs/tenants" ]; then'
             - '    mkdir -p /mnt/efs/tenants'
-            - '    cp -r /mnt/wso2is-5.5.0/repository/tenants /mnt/efs'
+            - '    cp -r /mnt/wso2is-5.6.0/repository/tenants /mnt/efs'
             - fi
             - >-
               rm -rf
-              /mnt/wso2is-5.5.0/repository/deployment/tenants
+              /mnt/wso2is-5.6.0/repository/deployment/tenants
             - >-
               ln -s /mnt/efs/tenants
-              /mnt/wso2is-5.5.0/repository/tenants
+              /mnt/wso2is-5.6.0/repository/tenants
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
                 - 'localhost'
                 - >-
                   /g"
-                  /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-RoleData.xml
+                  /mnt/wso2is-5.6.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-RoleData.xml
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
                 - 'localhost'
                 - >-
                   /g"
-                  /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-AuthenticationData.xml
+                  /mnt/wso2is-5.6.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-AuthenticationData.xml
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
                 - 'localhost'
                 - >-
                   /g"
-                  /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-SessionData.xml
+                  /mnt/wso2is-5.6.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-SessionData.xml
             - !Join
               - ''
               - - sed -i "s/CF_ANALYTICS_IP/
                 - 'localhost'
                 - >-
                   /g"
-                  /mnt/wso2is-5.5.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-UserData.xml
-            - /mnt/wso2is-5.5.0/bin/wso2server.sh start
+                  /mnt/wso2is-5.6.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-UserData.xml
+            - /mnt/wso2is-5.6.0/bin/wso2server.sh start
             - echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
             - cat /dev/null > ~/.bash_history && history -c
     DependsOn:
@@ -807,6 +820,19 @@ Resources:
               - ':server-certificate'
               - /
               - !Ref CertificateName
+        - LoadBalancerPort: '443'
+          InstancePort: '9443'
+          Protocol: HTTPS
+          InstanceProtocol: HTTPS
+          PolicyNames:
+            - LBStickyPolicy
+          SSLCertificateId: !Join
+            - ''
+            - - 'arn:aws:iam::'
+              - !Ref 'AWS::AccountId'
+              - ':server-certificate'
+              - /
+              - !Ref CertificateName
         - LoadBalancerPort: '8243'
           InstancePort: '8243'
           Protocol: HTTPS
@@ -836,7 +862,7 @@ Outputs:
         - !GetAtt
           - WSO2ISLoadBalancer
           - DNSName
-        - ':9443/carbon'
+        - '/carbon'
     Description: Identity Server Management Console URL
 Parameters:
   AWSAccessKeyId:
@@ -849,11 +875,10 @@ Parameters:
     Type: String
   KeyPairName:
     Description: >-
-      The key pair to establish a SSH connection to the web servers. This should
-      be already created.
+      The key pair to establish a SSH connection to the web servers
     Type: 'AWS::EC2::KeyPair::KeyName'
   CertificateName:
-    Description: A previously uploaded certificate to use at the Load Balancer Listeners.
+    Description: A previously uploaded certificate to use at the Load Balancer Listeners
     Type: String
     MinLength: 1
   WSO2InstanceType:
@@ -861,10 +886,6 @@ Parameters:
     Type: String
     Default: t2.medium
     AllowedValues:
-      - t2.nano
-      - t1.micro
-      - t2.micro
-      - t2.small
       - t2.medium
       - t2.large
       - t2.xlarge
@@ -875,106 +896,51 @@ Parameters:
       - m3.2xlarge
       - m4.large
     ConstraintDescription: must be a valid EC2 instance type
-  JDK:
-    Type: String
-    Default: "jdk-8u144-linux-x64.tar.gz"
-    Description: Target Java version
-    AllowedValues:
-      - jdk-8u144-linux-x64.tar.gz
-  DBEngine:
-    Type: String
-    Default: "mysql"
-    Description: Database Engine
-    AllowedValues:
-      - mysql
-      - postgres
-      - mariadb
-      - sqlserver-ex
-      - oracle-se
-  DBEngineVersion:
-    Type: String
-    Default: "5.6.35"
-    Description: Database Engine version
   WUMPassword:
     Type: String
     Default: ""
     NoEcho: true
-    Description: Enter WUM user password to get the updated WSO2 products deployed. If not provided standard released pack will be deployed
+    Description: Enter WSO2 Password
   WUMUsername:
     Type: String
     Default: ""
-    Description: Enter WUM user name
+    Description: Enter WSO2 Username
   DBUsername:
-    Description: The username to be used in the WSO2 IS DB.
+    Description: Enter Username for the WSO2 IS Database
     Type: String
     Default: root
     MinLength: 4
     AllowedPattern: '[A-Za-z0-9\-]+'
   DBPassword:
-    Description: The password to be used in the WSO2 IS DB.
+    Description: Enter Password for the WSO2 IS Database
     Type: String
     Default: wso2carbon
     MinLength: 8
     NoEcho: true
-  SSHIP:
-    Description: IP address of the machine used to SSH into the bastion instance
-    Type: String
 Mappings:
   WSO2PuppetMasterRegionMap:
-    ap-northeast-1:
-      Ubuntu140464bit: ami-to-be-added
-    ap-northeast-2:
-      Ubuntu140464bit: ami-to-be-added
-    ap-south-1:
-      Ubuntu140464bit: ami-to-be-added
-    ap-southeast-1:
-      Ubuntu140464bit: ami-to-be-added
     ap-southeast-2:
-      Ubuntu140464bit: ami-to-be-added
-    eu-central-1:
-      Ubuntu140464bit: ami-to-be-added
+      Ubuntu140464bit: ami-0a0075377e2fc407d
     eu-west-1:
-      Ubuntu140464bit: ami-to-be-added
-    eu-west-2:
-      Ubuntu140464bit: ami-to-be-added
+      Ubuntu140464bit: ami-0ef32aec34e07c718
     us-east-1:
-      Ubuntu140464bit: ami-0125bfcdceda1861c
+      Ubuntu140464bit: ami-008d181a63651b582
     us-east-2:
-      Ubuntu140464bit: ami-to-be-added
+      Ubuntu140464bit: ami-0148befd98fb35693
     us-west-1:
-      Ubuntu140464bit: ami-to-be-added
+      Ubuntu140464bit: ami-0fe9d57d64d67a03a
     us-west-2:
-      Ubuntu140464bit: ami-to-be-added
-    ca-central-1:
-      Ubuntu140464bit: ami-to-be-added
-    sa-east-1:
-      Ubuntu140464bit: ami-to-be-added
+      Ubuntu140464bit: ami-01bbc34c5b696d065
   WSO2ISAMIRegionMap:
-    ap-northeast-1:
-      Ubuntu140464bit: ami-to-be-added
-    ap-northeast-2:
-      Ubuntu140464bit: ami-to-be-added
-    ap-south-1:
-      Ubuntu140464bit: ami-to-be-added
-    ap-southeast-1:
-      Ubuntu140464bit: ami-to-be-added
     ap-southeast-2:
-      Ubuntu140464bit: ami-to-be-added
-    eu-central-1:
-      Ubuntu140464bit: ami-to-be-added
+      Ubuntu140464bit: ami-07f242195920e2ed3
     eu-west-1:
-      Ubuntu140464bit: ami-to-be-added
-    eu-west-2:
-      Ubuntu140464bit: ami-to-be-added
+      Ubuntu140464bit: ami-0039cc2b347a3c4f7
     us-east-1:
-      Ubuntu140464bit: ami-011a0a4aba1c14e99
+      Ubuntu140464bit: ami-03ef3afb221cd28aa
     us-east-2:
-      Ubuntu140464bit: ami-to-be-added
+      Ubuntu140464bit: ami-01f538ac9176c5c05
     us-west-1:
-      Ubuntu140464bit: ami-to-be-added
+      Ubuntu140464bit: ami-096d01893bc60727c
     us-west-2:
-      Ubuntu140464bit: ami-to-be-added
-    ca-central-1:
-      Ubuntu140464bit: ami-to-be-added
-    sa-east-1:
-      Ubuntu140464bit: ami-to-be-added
+      Ubuntu140464bit: ami-00d39f64a4e32bf6c
