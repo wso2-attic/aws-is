@@ -20,7 +20,7 @@ This could be used to ssh into the instances. Add a Server Certificate to AWS us
 
 3. Go to [AWS CloudFormation console](https://console.aws.amazon.com/cloudformation/home) and select ``Launch Cloudformer``.
 
-4. Browse to the cloned repository and select the [scalable-is](https://github.com/wso2/aws-is/tree/master/scalable-is) template and proceed with the deployment.
+4. Browse to the cloned repository and select the [scalable-is](https://github.com/wso2/aws-is/tree/master/scalable-is) CloudFormation template and proceed with the deployment.
 
 5. Follow the on screen instructions and provide the SSH key value pair name given in step 2, Server-Certificate-Name given in step 3 and other requested information and proceed.
 
