@@ -819,8 +819,6 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: '4040'
           ToPort: '4040'
@@ -844,11 +842,11 @@ Resources:
         - IpProtocol: tcp
           FromPort: '7611'
           ToPort: '7611'
-          SourceSecurityGroupId: !Ref WSO2ISSecurityGroup
+          SourceSecurityGroupId: !Ref WSO2ISAnalyticsLoadBalancerSecurityGroup
         - IpProtocol: tcp
           FromPort: '7711'
           ToPort: '7711'
-          SourceSecurityGroupId: !Ref WSO2ISSecurityGroup
+          SourceSecurityGroupId: !Ref WSO2ISAnalyticsLoadBalancerSecurityGroup
   WSO2ISAnalyticsNode1LaunchConfiguration:
     Type: 'AWS::AutoScaling::LaunchConfiguration'
     Properties:
