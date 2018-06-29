@@ -908,13 +908,11 @@ Parameters:
   DBUsername:
     Description: Enter Username for the WSO2 IS Database
     Type: String
-    Default: root
     MinLength: 4
     AllowedPattern: '[A-Za-z0-9\-]+'
   DBPassword:
     Description: Enter Password for the WSO2 IS Database
     Type: String
-    Default: wso2carbon
     MinLength: 8
     NoEcho: true
 Mappings:
