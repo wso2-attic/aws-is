@@ -1230,14 +1230,14 @@ Parameters:
     Type: String
   AWSAccessKeySecret:
     Description: >-
-      The AWS Access Key Secret for internal AWS CLI request calls
+      The AWS Access Key Secret used for internal AWS CLI request calls
     Type: String
   KeyPairName:
     Description: >-
-      The key pair to establish a SSH connection to the web servers
+      The key pair used to establish an SSH connection to the web servers
     Type: 'AWS::EC2::KeyPair::KeyName'
   CertificateName:
-    Description: A previously uploaded certificate to use at the Load Balancer Listeners.
+    Description: A previously uploaded certificate to use at the Load Balancer Listeners
     Type: String
     MinLength: 1
   WSO2InstanceType:
@@ -1254,23 +1254,23 @@ Parameters:
       - m3.xlarge
       - m3.2xlarge
       - m4.large
-    ConstraintDescription: must be a valid EC2 instance type
+    ConstraintDescription: Must be a valid EC2 instance type
   WUMPassword:
     Type: String
     Default: ""
     NoEcho: true
-    Description: Enter WSO2 Password
+    Description: WSO2 Password
   WUMUsername:
     Type: String
     Default: ""
-    Description: Enter WSO2 Username
+    Description: WSO2 Username
   DBUsername:
-    Description: Enter Username for the WSO2 IS Database
+    Description: Username for the WSO2 IS database
     Type: String
     MinLength: 4
     AllowedPattern: '[A-Za-z0-9\-]+'
   DBPassword:
-    Description: Enter Password for the WSO2 IS Database
+    Description: Password for the WSO2 IS database
     Type: String
     MinLength: 8
     NoEcho: true
