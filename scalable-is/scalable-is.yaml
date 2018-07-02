@@ -19,23 +19,23 @@ Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
       - Label:
-          default: Cluster Configurations
+          default: Cluster Configuration
         Parameters:
           - AWSAccessKeyId
           - AWSAccessKeySecret
           - KeyPairName
           - WSO2InstanceType
       - Label:
-          default: Network Configurations
+          default: Network Configuration
         Parameters:
           - CertificateName
       - Label:
-          default: Database Configurations
+          default: Database Credentials
         Parameters:
           - DBUsername
           - DBPassword
       - Label:
-          default: WSO2 Credentials
+          default: WUM Credentials
         Parameters:
           - WUMUsername
           - WUMPassword
@@ -45,21 +45,21 @@ Metadata:
       AWSAccessKeySecret:
         default: AWS Access Secret Key
       CertificateName:
-        default: Server Certificate Name
+        default: SSL Certificate Name
       KeyPairName:
         default: Key Pair Name
       DBUsername:
-        default: Database Username
+        default: Username
       DBPassword:
-        default: Database Password
+        default: Password
       JDK:
         default: JDK Version
       WUMUsername:
-        default: WSO2 Username
+        default: Username
       WUMPassword:
-        default: WSO2 Password
+        default: Password
       WSO2InstanceType:
-        default: EC2 Instance Type
+        default: Instance Type
 Resources:
   # networking configurations
   WSO2ISVPC:
@@ -866,23 +866,18 @@ Outputs:
     Description: Identity Server Management Console URL
 Parameters:
   AWSAccessKeyId:
-    Description: >-
-      The AWS Access Key ID used for internal AWS CLI request calls
     Type: String
   AWSAccessKeySecret:
-    Description: >-
-      The AWS Access Key Secret used for internal AWS CLI request calls
     Type: String
   KeyPairName:
     Description: >-
-      The key pair used to establish an SSH connection to the web servers
+      The private key used to log in to instances through SSH
     Type: 'AWS::EC2::KeyPair::KeyName'
   CertificateName:
-    Description: A previously uploaded certificate to use at the Load Balancer Listeners
+    Description: A previously uploaded SSL certificate used for HTTPS
     Type: String
     MinLength: 1
   WSO2InstanceType:
-    Description: EC2 instance type of the WSO2 nodes
     Type: String
     Default: t2.medium
     AllowedValues:
@@ -900,18 +895,14 @@ Parameters:
     Type: String
     Default: ""
     NoEcho: true
-    Description: WSO2 Password
   WUMUsername:
     Type: String
     Default: ""
-    Description: WSO2 Username
   DBUsername:
-    Description: Username for the WSO2 IS database
     Type: String
     MinLength: 4
     AllowedPattern: '[A-Za-z0-9\-]+'
   DBPassword:
-    Description: Password for the WSO2 IS database
     Type: String
     MinLength: 8
     NoEcho: true
