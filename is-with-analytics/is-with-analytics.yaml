@@ -1233,7 +1233,7 @@ Parameters:
       The private key used to log in to instances through SSH
     Type: 'AWS::EC2::KeyPair::KeyName'
   CertificateName:
-    Description: A previously uploaded SSL certificate used for HTTPS
+    Description: A valid SSL certificate used for HTTPS
     Type: String
     MinLength: 1
   WSO2InstanceType:
