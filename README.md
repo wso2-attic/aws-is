@@ -11,7 +11,7 @@ Each product pattern points to three previously created Amazon Machine Images (A
 
 3. IS-Analytics AMI - Includes the deployment pattern specific IS Analytics resources.
 
-First the Puppetmaster AMI would deploy as an instance and afterwards the product specific AMIs would deploy and request the necessary configurations from the Puppetmaster AMI to deploy the WSO2 Identity Server.
+First the Puppetmaster AMI would deploy and afterwards the product specific AMIs would deploy and request the necessary configurations from the Puppetmaster AMI to deploy the WSO2 Identity Server.
 
 ## Scalable IS
 
