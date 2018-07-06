@@ -8,9 +8,9 @@ The WSO2 IS CloudFormation templates use Puppet to manage the server configurati
 
 1. Puppetmaster AMI - Contains the Identity Server GA distribution, WSO2 Update Manager and Puppet modules containing the configurations for IS deployment patterns.
 
-2. IS AMI - Includes the deployment pattern specific IS resources to create the Puppet catalog.
+2. IS AMI - Includes the product specific resources to create the Puppet catalog.
 
-3. IS-Analytics AMI - Includes the deployment pattern specific IS Analytics resources to create the Puppet catalog.
+3. IS-Analytics AMI - Includes the product specific resources to create the Puppet catalog.
 
 First the Puppetmaster AMI would deploy and afterwards the product specific AMI's would deploy and request the necessary configurations from the Puppetmaster AMI to deploy the WSO2 Identity Server.
 
