@@ -4,14 +4,15 @@ This repository contains CloudFormation templates to deploy WSO2 Identity Server
 
 Available patterns are [scalable-is](https://github.com/wso2/aws-is/tree/master/scalable-is) and [is-with-analytics](https://github.com/wso2/aws-is/tree/master/is-with-analytics).
 
-Each product pattern points to three previously created Amazon Machine Images (AMI).
-1. Puppetmaster AMI - Consists the product packs(GA), WUM client, puppet modules, and the necessary configurations for each deployment pattern.
+The WSO2 IS CloudFormation templates use Puppet to manage the server configurations and use the following AMI's to provision the deployment.
 
-2. IS AMI - Includes the deployment pattern specific IS resources.
+1. Puppetmaster AMI - Contains the Identity Server GA distribution, WSO2 Update Manager and Puppet modules containing the configurations for IS deployment patterns.
 
-3. IS-Analytics AMI - Includes the deployment pattern specific IS Analytics resources.
+2. IS AMI - Includes the deployment pattern specific IS resources to create the Puppet catalog.
 
-First the Puppetmaster AMI would deploy and afterwards the product specific AMIs would deploy and request the necessary configurations from the Puppetmaster AMI to deploy the WSO2 Identity Server.
+3. IS-Analytics AMI - Includes the deployment pattern specific IS Analytics resources to create the Puppet catalog.
+
+First the Puppetmaster AMI would deploy and afterwards the product specific AMI's would deploy and request the necessary configurations from the Puppetmaster AMI to deploy the WSO2 Identity Server.
 
 ## Scalable IS
 
