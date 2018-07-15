@@ -2,23 +2,22 @@
 
 This repository contains CloudFormation templates to deploy WSO2 Identity Server with different patterns in Amazon Web Services(AWS).
 
-## Quick Start Guide
+Available patterns are [scalable-is](https://github.com/wso2/aws-is/tree/master/scalable-is) and [is-with-analytics](https://github.com/wso2/aws-is/tree/master/is-with-analytics).
 
-1. Checkout this repository into your local machine using the following Git command.
-```
-git clone https://github.com/wso2/aws-is.git
-```
+The WSO2 IS CloudFormation templates use Puppet to manage the server configurations and use the following AMI's to provision the deployment.
 
-2. Go to [AWS console](https://console.aws.amazon.com/ec2/v2/home#KeyPairs:sort=keyName) and specify a key value pair for authentication in **us-east-1** region. This could be used to ssh into the instances. Add a Server Certificate to AWS using ACM or IAM as explained [here](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_server-certs.html). This will be used at the load balancer listeners.
+1. Puppetmaster AMI - Contains the Identity Server GA distribution, WSO2 Update Manager and Puppet modules containing the configurations for IS deployment patterns.
 
-3. Go to [AWS CloudFormation console](https://console.aws.amazon.com/cloudformation/home) and select ``Launch Cloudformer``.
+2. IS AMI - Contains the scripts that is required to create the Puppet catalog.
 
-4. Browse to the cloned repository and select the Cloudformation template for the preferred deployment pattern and proceed with the deployment.
-    <br> Available patterns are [Scalable-IS](https://github.com/wso2/aws-is/tree/master/scalable-is) and [IS-with-Analytics](https://github.com/wso2/aws-is/tree/master/is-with-analytics).
-5. Follow the on screen instructions and provide the SSH key value pair name given in step 2, Server-Certificate-Name given in step 3 and other requested information and proceed.
+3. IS-Analytics AMI - Contains the scripts that is required to create the Puppet catalog.
 
-6. Access the web UIs via the URLs available in the **Outputs** tab and login using the following credentials.
-   * Username: admin <br>
-   * Password: admin
+First the Puppetmaster AMI would deploy and afterwards the product specific AMI's would deploy and request the necessary configurations from the Puppetmaster AMI to deploy the WSO2 Identity Server.
 
-**NOTE:** The services listed through above URLs may take around 15 minutes to become available, after stack creation.
+## Scalable IS
+
+![pattern1](images/is-pattern1.png)
+
+## Identity Server Configured with Analytics
+
+![pattern2](images/is-pattern2.png)
