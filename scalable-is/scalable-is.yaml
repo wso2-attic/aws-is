@@ -25,15 +25,26 @@ Metadata:
           - AWSAccessKeySecret
           - KeyPairName
           - WSO2InstanceType
+          - OperatingSystem
+          - ProductVersion
       - Label:
           default: Network Configuration
         Parameters:
           - CertificateName
       - Label:
-          default: Database Credentials
+          default: Database Configuration
         Parameters:
           - DBUsername
           - DBPassword
+          - DBAllocationStorage
+          - DBInstanceType
+          - DB
+      - Label:
+          default: Other Configuration
+        Parameters:
+          - CustomUserData
+          - JDK
+          - InternalPrepareForTest
       - Label:
           default: WUM Credentials
         Parameters:
@@ -52,14 +63,30 @@ Metadata:
         default: Username
       DBPassword:
         default: Password
+      DBAllocationStorage:
+        default: Allocation Storage
+      DBInstanceType:
+        default: Class Type
+      DB:
+        default: Engine Type
       JDK:
         default: JDK Version
+      InternalPrepareForTest:
+        default: Enable Test Mode
+      CustomUserData:
+        default: Customer User Data
       WUMUsername:
         default: Username
       WUMPassword:
         default: Password
       WSO2InstanceType:
         default: Instance Type
+      DB:
+        default: DB Engine
+      OperatingSystem:
+        default: OS Version
+      ProductVersion:
+        default: IS Version
 Resources:
   # networking configurations
   WSO2ISVPC:
@@ -190,11 +217,11 @@ Resources:
       BackupRetentionPeriod: '0'
       DBInstanceIdentifier: WSO2ISDBInstance
       DBName: WSO2_IS_DB
-      EngineVersion: 5.7.22
-      Engine: MySQL
+      Engine: !Select [0, !Split ["-", !Ref DB]]
+      EngineVersion: !Select [1, !Split ["-", !Ref DB]]
       MasterUsername: !Ref DBUsername
       MasterUserPassword: !Ref DBPassword
-      MultiAZ: 'true'
+      MultiAZ: 'false'
       StorageType: gp2
       DBSubnetGroupName: !Ref WSO2ISDBSubnetGroup
   WSO2ISDBSubnetGroup:
@@ -276,13 +303,13 @@ Resources:
           ToPort: '5672'
           SourceSecurityGroupId: !Ref WSO2ISLoadBalancerSecurityGroup
         - IpProtocol: tcp
-          FromPort: '5701'
-          ToPort: '5701'
+          FromPort: '4100'
+          ToPort: '4100'
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: '8140'
           ToPort: '8140'
-          CidrIp: 0.0.0.0/0
+          SourceSecurityGroupId: !Ref WSO2ISLoadBalancerSecurityGroup
   WSO2BastionInstance:
     Type: 'AWS::EC2::Instance'
     Properties:
@@ -291,7 +318,7 @@ Resources:
       ImageId: !FindInMap
         - WSO2ISAMIRegionMap
         - !Ref 'AWS::Region'
-        - Ubuntu180464bit
+        - Ubuntu1804
       InstanceType: t2.micro
       KeyName: !Ref KeyPairName
       Monitoring: 'false'
@@ -313,7 +340,7 @@ Resources:
       ImageId: !FindInMap
         - WSO2PuppetMasterRegionMap
         - !Ref 'AWS::Region'
-        - Ubuntu180464bit
+        - Ubuntu1804
       InstanceType: !Ref WSO2InstanceType
       KeyName: !Ref KeyPairName
       Monitoring: 'false'
@@ -339,18 +366,22 @@ Resources:
             - echo "127.0.0.1 $(hostname)" >> /etc/hosts
             - sed -i '/\[main\]/a dns_alt_names=puppetmaster,puppet' /etc/puppet/puppet.conf
             - sed -i '/\[master\]/a autosign=true' /etc/puppet/puppet.conf
+            - !Join
+              - ''
+              - - export ProductVersion=
+                - !Ref ProductVersion
             - service puppetmaster restart
-            - !Sub "./home/ubuntu/is-init.sh ${WUMUsername} ${WUMPassword}"
+            - !Sub "./home/ubuntu/wso2-init.sh ${WUMUsername} ${WUMPassword} wso2is-${ProductVersion} ${InternalPrepareForTest}"
             - !Join
               - ''
               - - sed -i "s/access-key/
                 - !Ref AWSAccessKeyId
-                - /g" /etc/puppet/code/environments/production/modules/is/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/REGION_NAME/
                 - !Ref "AWS::Region"
-                - /g" /etc/puppet/code/environments/production/modules/is/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_ELB_DNS_NAME/
@@ -359,29 +390,34 @@ Resources:
                   - DNSName
                 - >-
                   /g"
-                  /etc/puppet/code/environments/production/modules/is/manifests/params.pp
+                  /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DB_USERNAME/
                 - !Ref DBUsername
-                - /g" /etc/puppet/code/environments/production/modules/is/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DB_PASSWORD/
                 - !Ref DBPassword
-                - /g" /etc/puppet/code/environments/production/modules/is/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_RDS_URL/
                 - !GetAtt
                   - WSO2ISDBInstance
                   - Endpoint.Address
-                - /g" /etc/puppet/code/environments/production/modules/is/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s^secretkey^
                 - !Ref AWSAccessKeySecret
-                - ^g" /etc/puppet/code/environments/production/modules/is/manifests/params.pp
+                - ^g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
+            - !Join
+              - ''
+              - - sed -i "s/JDK_TYPE/
+                - !Ref JDK
+                - /g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
             - export DB_NAME=WSO2_IS_DB
             - !Join
               - ''
@@ -403,6 +439,11 @@ Resources:
               - ''
               - - export DB_PASSWORD=
                 - !Ref DBPassword
+            - !Join
+             - ''
+             - - sed -i "s/JDK_TYPE/
+               - !Ref JDK
+               - /g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp         
             - !Join
               - ''
               - - sed -i "s/CF_DB_USERNAME/
@@ -448,7 +489,7 @@ Resources:
       ImageId: !FindInMap
         - WSO2ISAMIRegionMap
         - !Ref 'AWS::Region'
-        - Ubuntu180464bit
+        - !Ref OperatingSystem
       InstanceType: !Ref WSO2InstanceType
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
@@ -471,6 +512,10 @@ Resources:
             - sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
             - !Join
               - ''
+              - - export ProductVersion=
+                - !Ref ProductVersion
+            - !Join
+              - ''
               - - export PuppetmasterIP=
                 - !GetAtt
                   - PuppetMaster
@@ -480,29 +525,29 @@ Resources:
             - mkdir -p /mnt/efs
             - !Sub "mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs"
             - sleep 350
-            - export FACTER_profile=is
+            - export FACTER_profile=is${ProductVersion//.}
             - puppet agent -vt
             - sleep 120
             - 'if [ ! -d "/mnt/efs/server" ]; then'
             - '    mkdir -p /mnt/efs/server'
-            - '    cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/wso2is-5.7.0/repository/deployment/server /mnt/efs'
+            - '    cp -r /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/deployment/server /mnt/efs'
             - fi
             - >-
               rm -rf
-              /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/wso2is-5.7.0/repository/deployment/server
+              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/deployment/server
             - >-
               ln -s /mnt/efs/server
-              /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/wso2is-5.7.0/repository/deployment/server
+              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/deployment/server
             - 'if [ ! -d "/mnt/efs/tenants" ]; then'
             - '    mkdir -p /mnt/efs/tenants'
-            - '    cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants /mnt/efs'
+            - '    cp -r /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/tenants /mnt/efs'
             - fi
             - >-
               rm -rf
-              /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
+              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/tenants
             - >-
               ln -s /mnt/efs/tenants
-              /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
+              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/tenants
             - apt-get install -y python3-pip
             - pip3 install boto3
             - echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
@@ -513,8 +558,9 @@ Resources:
                 - $PRIVATE_IP
                 - >-
                   /g"
-                  /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/conf/axis2/axis2.xml
-            - /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/bin/wso2server.sh start
+                  /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/conf/axis2/axis2.xml
+            - /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/bin/wso2server.sh start
+            - ${CustomUserData}
             - echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
             - cat /dev/null > ~/.bash_history && history -c
     DependsOn:
@@ -550,7 +596,7 @@ Resources:
       ImageId: !FindInMap
         - WSO2ISAMIRegionMap
         - !Ref 'AWS::Region'
-        - Ubuntu180464bit
+        - !Ref OperatingSystem
       InstanceType: !Ref WSO2InstanceType
       BlockDeviceMappings:
         - DeviceName: /dev/sda1
@@ -573,6 +619,10 @@ Resources:
             - sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
             - !Join
               - ''
+              - - export ProductVersion=
+                - !Ref ProductVersion
+            - !Join
+              - ''
               - - export PuppetmasterIP=
                 - !GetAtt
                   - PuppetMaster
@@ -581,30 +631,30 @@ Resources:
             - service puppet restart
             - mkdir -p /mnt/efs
             - !Sub "mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs"
-            - sleep 350
-            - export FACTER_profile=is
+            - sleep 500
+            - export FACTER_profile=is${ProductVersion//.}
             - puppet agent -vt
             - sleep 120
             - 'if [ ! -d "/mnt/efs/server" ]; then'
             - '    mkdir -p /mnt/efs/server'
-            - '    cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server /mnt/efs'
+            - '    cp -r /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/deployment/server /mnt/efs'
             - fi
             - >-
               rm -rf
-              /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
+              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/deployment/server
             - >-
               ln -s /mnt/efs/server
-              /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
+              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/deployment/server
             - 'if [ ! -d "/mnt/efs/tenants" ]; then'
             - '    mkdir -p /mnt/efs/tenants'
-            - '    cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants /mnt/efs'
+            - '    cp -r /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/tenants /mnt/efs'
             - fi
             - >-
               rm -rf
-              /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
+              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/tenants
             - >-
               ln -s /mnt/efs/tenants
-              /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
+              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/tenants
             - apt-get install -y python3-pip
             - pip3 install boto3
             - echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
@@ -615,8 +665,9 @@ Resources:
                 - $PRIVATE_IP
                 - >-
                   /g"
-                  /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/conf/axis2/axis2.xml
-            - /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/bin/wso2server.sh start
+                  /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/conf/axis2/axis2.xml
+            - /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/bin/wso2server.sh start
+            - ${CustomUserData}
             - echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
             - cat /dev/null > ~/.bash_history && history -c
     DependsOn:
@@ -773,7 +824,7 @@ Resources:
     DependsOn:
       - WSO2ISLoadBalancerSecurityGroup
 Outputs:
-  ISCarbonURL:
+  MgtConsoleUrl:
     Value: !Join
       - ''
       - - 'https://'
@@ -782,6 +833,32 @@ Outputs:
           - DNSName
         - '/carbon'
     Description: Identity Server Management Console URL
+  CarbonServerUrl:
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !GetAtt
+          - WSO2ISLoadBalancer
+          - DNSName
+        - '/services'
+    Description: Carbon Server URL
+  ISHttpUrl:
+    Value: !Join
+      - ''
+      - - 'http://'
+        - !GetAtt
+          - WSO2ISLoadBalancer
+          - DNSName
+        - ':80'
+    Description: IS HTTP Gateway endpoint
+  ISHttpsUrl:
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !GetAtt
+          - WSO2ISLoadBalancer
+          - DNSName
+        - ':443'
 Parameters:
   AWSAccessKeyId:
     Type: String
@@ -809,6 +886,21 @@ Parameters:
       - m3.2xlarge
       - m4.large
     ConstraintDescription: Must be a valid EC2 instance type
+  CustomUserData:
+    Type: String
+    Default: "echo"
+  JDK:
+    Type: String
+    Default: "OPEN_JDK8"
+    AllowedValues:
+      - "OPEN_JDK8"
+      - "ORACLE_JDK8"
+  InternalPrepareForTest:
+    Type: String
+    Default: "False"
+    AllowedValues:
+      - "False"
+      - "True"
   WUMPassword:
     Type: String
     Default: ""
@@ -824,30 +916,65 @@ Parameters:
     Type: String
     MinLength: 8
     NoEcho: true
+  DBAllocationStorage:
+    Description: Provide storage size in Gigabytes
+    Type: Number
+    Default: 20
+  DBInstanceType:
+    Type: String
+    Default: db.t2.medium
+    AllowedValues:
+      - db.t2.medium
+      - db.t2.large
+      - db.t2.xlarge
+      - db.t2.2xlarge
+      - db.m3.medium
+      - db.m3.large
+      - db.m3.xlarge
+      - db.m3.2xlarge
+      - db.m4.large
+  DB:
+    Type: String
+    Default: MySQL-5.6
+    AllowedValues:
+      - MySQL-5.6
+      - MySQL-5.7
+  OperatingSystem:
+    Type: String
+    Default: Ubuntu1804
+    AllowedValues:
+      - Ubuntu1804
+  ProductVersion:
+    Type: String
+    Default: 5.7.0
+    AllowedValues:
+      - 5.7.0
+      - 5.3.0
+      - 5.2.0            
 Mappings:
   WSO2PuppetMasterRegionMap:
     ap-southeast-2:
-      Ubuntu180464bit: ami-005d8154207e981a4
+      Ubuntu1804: ami-0e8d57e6da8cd0d50
     eu-west-1:
-      Ubuntu180464bit: ami-0ea3b70805378f796
+      Ubuntu1804: ami-0b63559f785352775
     us-east-1:
-      Ubuntu180464bit: ami-04db6acce789912b4
+      Ubuntu1804: ami-0321528ac2ba9006f
     us-east-2:
-      Ubuntu180464bit: ami-0e8d8e6d8d5498378
+      Ubuntu1804: ami-0b5c9c2560c51032e
     us-west-1:
-      Ubuntu180464bit: ami-01c303b902735f14b
+      Ubuntu1804: ami-0fcd5254a7a848775
     us-west-2:
-      Ubuntu180464bit: ami-0b0d60d0d5ed5c8c6
+      Ubuntu1804: ami-01cf3b8e778a4b827
   WSO2ISAMIRegionMap:
     ap-southeast-2:
-      Ubuntu180464bit: ami-07a3bd4944eb120a0
+      Ubuntu1804: ami-07a3bd4944eb120a0
     eu-west-1:
-      Ubuntu180464bit: ami-00035f41c82244dab
+      Ubuntu1804: ami-00035f41c82244dab
     us-east-1:
-      Ubuntu180464bit: ami-0ac019f4fcb7cb7e6
+      Ubuntu1804: ami-0ac019f4fcb7cb7e6
     us-east-2:
-      Ubuntu180464bit: ami-0f65671a86f061fcd
+      Ubuntu1804: ami-0f65671a86f061fcd
     us-west-1:
-      Ubuntu180464bit: ami-063aa838bd7631e0b
+      Ubuntu1804: ami-063aa838bd7631e0b
     us-west-2:
-      Ubuntu180464bit: ami-0bbe6b35405ecebdb
+      Ubuntu1804: ami-0bbe6b35405ecebdb
