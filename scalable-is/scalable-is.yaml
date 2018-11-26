@@ -576,8 +576,8 @@ Resources:
       DesiredCapacity: 1
       MinSize: 1
       MaxSize: 1
-      LoadBalancerNames:
-        - !Ref WSO2ISLoadBalancer
+      TargetGroupARNs:
+        - !Ref WSO2ISALBTargetGroup
       VPCZoneIdentifier:
         - !Ref WSO2ISPrivateSubnet1
       Tags:
@@ -683,8 +683,8 @@ Resources:
       DesiredCapacity: 1
       MinSize: 1
       MaxSize: 1
-      LoadBalancerNames:
-        - !Ref WSO2ISLoadBalancer
+      TargetGroupARNs:
+        - !Ref WSO2ISALBTargetGroup
       VPCZoneIdentifier:
         - !Ref WSO2ISPrivateSubnet1
       Tags:
@@ -753,74 +753,58 @@ Resources:
           ToPort: '5701'
           CidrIp: 0.0.0.0/0
   WSO2ISLoadBalancer:
-    Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      CrossZone: true
+      Name: IS
+      Scheme: internet-facing
+      Subnets:
+        - !Ref WSO2ISPublicSubnet1
+        - !Ref WSO2ISPublicSubnet2
       SecurityGroups:
         - !Ref WSO2ISLoadBalancerSecurityGroup
-      Subnets:
-        - !Ref WSO2ISPublicSubnet2
-        - !Ref WSO2ISPublicSubnet1
-      LBCookieStickinessPolicy:
-        - PolicyName: LBStickyPolicy
-      Listeners:
-        - LoadBalancerPort: '9763'
-          InstancePort: '9763'
-          Protocol: HTTP
-          InstanceProtocol: HTTP
-          PolicyNames:
-            - LBStickyPolicy
-        - LoadBalancerPort: '8280'
-          InstancePort: '8280'
-          Protocol: HTTP
-          InstanceProtocol: HTTP
-          PolicyNames:
-            - LBStickyPolicy
-        - LoadBalancerPort: '9443'
-          InstancePort: '9443'
-          Protocol: HTTPS
-          InstanceProtocol: HTTPS
-          PolicyNames:
-            - LBStickyPolicy
-          SSLCertificateId: !Join
-            - ''
-            - - 'arn:aws:iam::'
-              - !Ref 'AWS::AccountId'
-              - ':server-certificate'
-              - /
-              - !Ref CertificateName
-        - LoadBalancerPort: '443'
-          InstancePort: '9443'
-          Protocol: HTTPS
-          InstanceProtocol: HTTPS
-          PolicyNames:
-            - LBStickyPolicy
-          SSLCertificateId: !Join
-            - ''
-            - - 'arn:aws:iam::'
-              - !Ref 'AWS::AccountId'
-              - ':server-certificate'
-              - /
-              - !Ref CertificateName
-        - LoadBalancerPort: '8243'
-          InstancePort: '8243'
-          Protocol: HTTPS
-          InstanceProtocol: HTTPS
-          PolicyNames:
-            - LBStickyPolicy
-          SSLCertificateId: !Join
-            - ''
-            - - 'arn:aws:iam::'
-              - !Ref 'AWS::AccountId'
-              - ':server-certificate'
-              - /
-              - !Ref CertificateName
-      HealthCheck:
-          Target: 'TCP:9763'
-          HealthyThreshold: '3'
-          UnhealthyThreshold: '5'
-          Interval: '10'
-          Timeout: '5'
+  WSO2ISALBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckProtocol: HTTPS
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 4
+      HealthCheckPath: /carbon/admin/login.jsp
+      HealthCheckPort: 9443
+      Matcher:
+        HttpCode: 200
+      Name: is-carbon-9443
+      Port: 9443
+      Protocol: HTTPS
+      TargetGroupAttributes:
+      - Key: deregistration_delay.timeout_seconds
+        Value: '20'
+      - Key: stickiness.enabled
+        Value: 'true'
+      UnhealthyThresholdCount: 3
+      VpcId:
+        Ref: WSO2ISVPC
+      Tags:
+      - Key: Name
+        Value: is
+  WSO2EIALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref WSO2ISALBTargetGroup
+      Certificates:
+        - CertificateArn: !Join
+          - ''
+          - - 'arn:aws:iam::'
+            - !Ref 'AWS::AccountId'
+            - ':server-certificate'
+            - /
+            - !Ref CertificateName
+      LoadBalancerArn: !Ref WSO2ISLoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-TLS-1-1-2017-01
     DependsOn:
       - WSO2ISLoadBalancerSecurityGroup
 Outputs:
