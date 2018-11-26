@@ -787,7 +787,7 @@ Resources:
       Tags:
       - Key: Name
         Value: is
-  WSO2EIALBListener:
+  WSO2ISALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
       DefaultActions:
