@@ -21,3 +21,8 @@ First the Puppetmaster AMI would deploy and afterwards the product specific AMI'
 ## Identity Server Configured with Analytics
 
 ![pattern2](images/is-pattern2.png)
+
+## Identity Server Samples
+
+- Setting up "travelocity.com" application for SAML SSO authentication
+
