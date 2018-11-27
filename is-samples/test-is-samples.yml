@@ -285,6 +285,7 @@ Resources:
           cd /opt/testgrid/workspace/TOMCATHOME/apache-tomcat-8.5.35/
 
           sed -i 's,https://localhost:9443,${ISHttpsUrl},g' webapps/travelocity.com/WEB-INF/classes/travelocity.properties
+          sed -i 's,SAML2.IdPEntityId=localhost,SAML2.IdPEntityId='$(echo ${ISHttpsUrl} | sed 's,https://,,g' | sed 's,:443,,g')',g' webapps/travelocity.com/WEB-INF/classes/travelocity.properties
           sed -i 's,http://localhost:8080,http://'$(curl http://169.254.169.254/latest/meta-data/public-ipv4)':8080,g' webapps/travelocity.com/WEB-INF/classes/travelocity.properties
           cd bin
           sh catalina.sh start
