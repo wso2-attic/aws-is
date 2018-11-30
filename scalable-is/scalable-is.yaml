@@ -26,7 +26,6 @@ Metadata:
           - KeyPairName
           - WSO2InstanceType
           - OperatingSystem
-          - ProductVersion
       - Label:
           default: Network Configuration
         Parameters:
@@ -36,9 +35,9 @@ Metadata:
         Parameters:
           - DBUsername
           - DBPassword
+          - DB
           - DBAllocationStorage
           - DBInstanceType
-          - DB
       - Label:
           default: Other Configuration
         Parameters:
@@ -66,11 +65,11 @@ Metadata:
       DBAllocationStorage:
         default: Allocation Storage
       DBInstanceType:
-        default: Class Type
+        default: DB Instance Type
       DB:
-        default: Engine Type
+        default: Database
       JDK:
-        default: JDK Version
+        default: JDK
       InternalPrepareForTest:
         default: Enable Test Mode
       CustomUserData:
@@ -81,12 +80,9 @@ Metadata:
         default: Password
       WSO2InstanceType:
         default: Instance Type
-      DB:
-        default: DB Engine
       OperatingSystem:
         default: OS Version
-      ProductVersion:
-        default: IS Version
+
 Resources:
   # networking configurations
   WSO2ISVPC:
@@ -212,16 +208,16 @@ Resources:
     Properties:
       VPCSecurityGroups:
         - !Ref WSO2ISDBInstanceSecurityGroup
-      DBInstanceClass: db.t2.medium
-      AllocatedStorage: 5
+      DBInstanceClass: !Ref DBInstanceType
+      AllocatedStorage: !Ref DBAllocationStorage
       BackupRetentionPeriod: '0'
       DBInstanceIdentifier: WSO2ISDBInstance
       DBName: WSO2_IS_DB
-      Engine: !Select [0, !Split ["-", !Ref DB]]
       EngineVersion: !Select [1, !Split ["-", !Ref DB]]
+      Engine: !Select [0, !Split ["-", !Ref DB]]
       MasterUsername: !Ref DBUsername
       MasterUserPassword: !Ref DBPassword
-      MultiAZ: 'false'
+      MultiAZ: 'true'
       StorageType: gp2
       DBSubnetGroupName: !Ref WSO2ISDBSubnetGroup
   WSO2ISDBSubnetGroup:
@@ -309,7 +305,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: '8140'
           ToPort: '8140'
-          SourceSecurityGroupId: !Ref WSO2ISLoadBalancerSecurityGroup
+          CidrIp: 0.0.0.0/0
   WSO2BastionInstance:
     Type: 'AWS::EC2::Instance'
     Properties:
@@ -366,22 +362,19 @@ Resources:
             - echo "127.0.0.1 $(hostname)" >> /etc/hosts
             - sed -i '/\[main\]/a dns_alt_names=puppetmaster,puppet' /etc/puppet/puppet.conf
             - sed -i '/\[master\]/a autosign=true' /etc/puppet/puppet.conf
-            - !Join
-              - ''
-              - - export ProductVersion=
-                - !Ref ProductVersion
             - service puppetmaster restart
-            - !Sub "./home/ubuntu/wso2-init.sh ${WUMUsername} ${WUMPassword} wso2is-${ProductVersion} ${InternalPrepareForTest}"
+            - popd /home/ubuntu
+            - !Sub "./wso2-init.sh ${WUMUsername} ${WUMPassword} wso2is-5.7.0 ${InternalPrepareForTest}"
             - !Join
               - ''
               - - sed -i "s/access-key/
                 - !Ref AWSAccessKeyId
-                - /g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is570/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/REGION_NAME/
                 - !Ref "AWS::Region"
-                - /g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is570/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_ELB_DNS_NAME/
@@ -390,35 +383,35 @@ Resources:
                   - DNSName
                 - >-
                   /g"
-                  /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
+                  /etc/puppet/code/environments/production/modules/is570/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DB_USERNAME/
                 - !Ref DBUsername
-                - /g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is570/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DB_PASSWORD/
                 - !Ref DBPassword
-                - /g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is570/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_RDS_URL/
                 - !GetAtt
                   - WSO2ISDBInstance
                   - Endpoint.Address
-                - /g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is570/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s^secretkey^
                 - !Ref AWSAccessKeySecret
-                - ^g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
+                - ^g" /etc/puppet/code/environments/production/modules/is570/manifests/params.pp
+            - export DB_NAME=WSO2_IS_DB
             - !Join
               - ''
               - - sed -i "s/JDK_TYPE/
                 - !Ref JDK
-                - /g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp
-            - export DB_NAME=WSO2_IS_DB
+                - /g" /etc/puppet/code/environments/production/modules/is570/manifests/params.pp
             - !Join
               - ''
               - - export DB_HOSTNAME=
@@ -439,11 +432,6 @@ Resources:
               - ''
               - - export DB_PASSWORD=
                 - !Ref DBPassword
-            - !Join
-             - ''
-             - - sed -i "s/JDK_TYPE/
-               - !Ref JDK
-               - /g" /etc/puppet/code/environments/production/modules/is${ProductVersion//.}/manifests/params.pp         
             - !Join
               - ''
               - - sed -i "s/CF_DB_USERNAME/
@@ -501,68 +489,51 @@ Resources:
       SecurityGroups:
         - !Ref WSO2ISSecurityGroup
       UserData: !Base64
-        'Fn::Join':
-          - |+
-
-          - - '#!/bin/bash'
-            - 'export PATH=~/.local/bin:$PATH'
-            - apt-get update
-            - apt-get install -y puppet
-            - apt-get install -y nfs-common
-            - sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
-            - !Join
-              - ''
-              - - export ProductVersion=
-                - !Ref ProductVersion
-            - !Join
-              - ''
-              - - export PuppetmasterIP=
-                - !GetAtt
-                  - PuppetMaster
-                  - PrivateIp
-            - echo "${PuppetmasterIP} puppet puppetmaster" >> /etc/hosts
-            - service puppet restart
-            - mkdir -p /mnt/efs
-            - !Sub "mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs"
-            - sleep 350
-            - export FACTER_profile=is${ProductVersion//.}
-            - puppet agent -vt
-            - sleep 120
-            - 'if [ ! -d "/mnt/efs/server" ]; then'
-            - '    mkdir -p /mnt/efs/server'
-            - '    cp -r /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/deployment/server /mnt/efs'
-            - fi
-            - >-
-              rm -rf
-              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/deployment/server
-            - >-
-              ln -s /mnt/efs/server
-              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/deployment/server
-            - 'if [ ! -d "/mnt/efs/tenants" ]; then'
-            - '    mkdir -p /mnt/efs/tenants'
-            - '    cp -r /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/tenants /mnt/efs'
-            - fi
-            - >-
-              rm -rf
-              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/tenants
-            - >-
-              ln -s /mnt/efs/tenants
-              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/tenants
-            - apt-get install -y python3-pip
-            - pip3 install boto3
-            - echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
-            - !Sub "PRIVATE_IP=$(python3 /usr/local/bin/private_ip_extractor.py ${AWS::Region} ${AWSAccessKeyId} ${AWSAccessKeySecret} WSO2ISInstance1)"
-            - !Join
-              - ''
-              - - sed -i "s/LOCAL-MEMBER-HOST/
-                - $PRIVATE_IP
-                - >-
-                  /g"
-                  /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/conf/axis2/axis2.xml
-            - /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/bin/wso2server.sh start
-            - ${CustomUserData}
-            - echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
-            - cat /dev/null > ~/.bash_history && history -c
+        'Fn::Sub': |
+                   #cloud-boothook
+                   #!/bin/bash
+                   export PATH=~/.local/bin:$PATH
+                   apt-get update
+                   sudo apt-get install python-pip -y
+                   pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
+                   apt-get install -y puppet
+                   apt-get install -y nfs-common
+                   sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
+                   export PuppetmasterIP=${PuppetMaster.PrivateIp}
+                   echo "$PuppetmasterIP puppet puppetmaster" >> /etc/hosts
+                   service puppet restart
+                   mkdir -p /mnt/efs
+                   mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs
+                   sleep 100
+                   export FACTER_profile=is570
+                   puppet agent -vt
+                   sleep 10
+                   if [ ! -d "/mnt/efs/server" ]; then
+                   	mkdir -p /mnt/efs/server
+                   	cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server /mnt/efs
+                   fi
+                   rm -rf  /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
+                   ln -s /mnt/efs/server /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
+                   if [ ! -d "/mnt/efs/tenants" ]; then
+                   	mkdir -p /mnt/efs/tenants
+                   	cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants /mnt/efs
+                   fi
+                   rm -rf /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
+                   ln -s /mnt/efs/tenants /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
+                   apt-get install -y python3-pip
+                   pip3 install boto3
+                   echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
+                   /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/bin/wso2server.sh start
+                   ${CustomUserData}
+                   echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
+                   cat /dev/null > ~/.bash_history && history -c
+                   end=$((SECONDS+600))
+                   while [ $SECONDS -lt $end ] ; do
+                       wget --delete-after --server-response --no-check-certificate "https://localhost:9443/carbon/admin/login.jsp"
+                       if [ $? -eq "0" ] ; then
+                       /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WSO2ISNode1AutoScalingGroup --region ${AWS::Region}
+                       fi
+                   done
     DependsOn:
       - WSO2ISSecurityGroup
       - WSO2ISLoadBalancer
@@ -575,7 +546,7 @@ Resources:
       LaunchConfigurationName: !Ref WSO2ISNode1LaunchConfiguration
       DesiredCapacity: 1
       MinSize: 1
-      MaxSize: 1
+      MaxSize: 2
       TargetGroupARNs:
         - !Ref WSO2ISALBTargetGroup
       VPCZoneIdentifier:
@@ -587,9 +558,20 @@ Resources:
         - Key: cluster
           Value: is
           PropagateAtLaunch: 'true'
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT12M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MaxBatchSize: '2'
+        MinInstancesInService: '1'
+        PauseTime: PT10M
+        SuspendProcesses:
+          - AlarmNotification
+        WaitOnResourceSignals: true
     DependsOn:
       - WSO2ISLoadBalancer
-      - WSO2ISNode1LaunchConfiguration
   WSO2ISNode2LaunchConfiguration:
     Type: 'AWS::AutoScaling::LaunchConfiguration'
     Properties:
@@ -608,68 +590,51 @@ Resources:
       SecurityGroups:
         - !Ref WSO2ISSecurityGroup
       UserData: !Base64
-        'Fn::Join':
-          - |+
-
-          - - '#!/bin/bash'
-            - 'export PATH=~/.local/bin:$PATH'
-            - apt-get update
-            - apt-get install -y puppet
-            - apt-get install -y nfs-common
-            - sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
-            - !Join
-              - ''
-              - - export ProductVersion=
-                - !Ref ProductVersion
-            - !Join
-              - ''
-              - - export PuppetmasterIP=
-                - !GetAtt
-                  - PuppetMaster
-                  - PrivateIp
-            - echo "${PuppetmasterIP} puppet puppetmaster" >> /etc/hosts
-            - service puppet restart
-            - mkdir -p /mnt/efs
-            - !Sub "mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs"
-            - sleep 500
-            - export FACTER_profile=is${ProductVersion//.}
-            - puppet agent -vt
-            - sleep 120
-            - 'if [ ! -d "/mnt/efs/server" ]; then'
-            - '    mkdir -p /mnt/efs/server'
-            - '    cp -r /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/deployment/server /mnt/efs'
-            - fi
-            - >-
-              rm -rf
-              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/deployment/server
-            - >-
-              ln -s /mnt/efs/server
-              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/deployment/server
-            - 'if [ ! -d "/mnt/efs/tenants" ]; then'
-            - '    mkdir -p /mnt/efs/tenants'
-            - '    cp -r /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/tenants /mnt/efs'
-            - fi
-            - >-
-              rm -rf
-              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/tenants
-            - >-
-              ln -s /mnt/efs/tenants
-              /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/tenants
-            - apt-get install -y python3-pip
-            - pip3 install boto3
-            - echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
-            - !Sub "PRIVATE_IP=$(python3 /usr/local/bin/private_ip_extractor.py ${AWS::Region} ${AWSAccessKeyId} ${AWSAccessKeySecret} WSO2ISInstance2)"
-            - !Join
-              - ''
-              - - sed -i "s/LOCAL-MEMBER-HOST/
-                - $PRIVATE_IP
-                - >-
-                  /g"
-                  /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/repository/conf/axis2/axis2.xml
-            - /usr/lib/wso2/wso2is/${ProductVersion}/wso2is-${ProductVersion}/bin/wso2server.sh start
-            - ${CustomUserData}
-            - echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
-            - cat /dev/null > ~/.bash_history && history -c
+        'Fn::Sub': |
+                   #cloud-boothook
+                   #!/bin/bash
+                   export PATH=~/.local/bin:$PATH
+                   apt-get update
+                   sudo apt-get install python-pip -y
+                   pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
+                   apt-get install -y puppet
+                   apt-get install -y nfs-common
+                   sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
+                   export PuppetmasterIP=${PuppetMaster.PrivateIp}
+                   echo "$PuppetmasterIP puppet puppetmaster" >> /etc/hosts
+                   service puppet restart
+                   mkdir -p /mnt/efs
+                   mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs
+                   sleep 100
+                   export FACTER_profile=is570
+                   puppet agent -vt
+                   sleep 10
+                   if [ ! -d "/mnt/efs/server" ]; then
+                   	mkdir -p /mnt/efs/server
+                   	cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server /mnt/efs
+                   fi
+                   rm -rf  /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
+                   ln -s /mnt/efs/server /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
+                   if [ ! -d "/mnt/efs/tenants" ]; then
+                   	mkdir -p /mnt/efs/tenants
+                   	cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants /mnt/efs
+                   fi
+                   rm -rf /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
+                   ln -s /mnt/efs/tenants /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
+                   apt-get install -y python3-pip
+                   pip3 install boto3
+                   echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
+                   /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/bin/wso2server.sh start
+                   ${CustomUserData}
+                   echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
+                   cat /dev/null > ~/.bash_history && history -c
+                   end=$((SECONDS+600))
+                   while [ $SECONDS -lt $end ] ; do
+                       wget --delete-after --server-response --no-check-certificate "https://localhost:9443/carbon/admin/login.jsp"
+                       if [ $? -eq "0" ] ; then
+                       /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WSO2ISNode2AutoScalingGroup --region ${AWS::Region}
+                       fi
+                   done
     DependsOn:
       - WSO2ISSecurityGroup
       - WSO2ISLoadBalancer
@@ -682,7 +647,7 @@ Resources:
       LaunchConfigurationName: !Ref WSO2ISNode2LaunchConfiguration
       DesiredCapacity: 1
       MinSize: 1
-      MaxSize: 1
+      MaxSize: 2
       TargetGroupARNs:
         - !Ref WSO2ISALBTargetGroup
       VPCZoneIdentifier:
@@ -694,9 +659,20 @@ Resources:
         - Key: cluster
           Value: is
           PropagateAtLaunch: 'true'
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT12M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MaxBatchSize: '2'
+        MinInstancesInService: '1'
+        PauseTime: PT10M
+        SuspendProcesses:
+          - AlarmNotification
+        WaitOnResourceSignals: true
     DependsOn:
       - WSO2ISLoadBalancer
-      - WSO2ISNode2LaunchConfiguration
   WSO2ISLoadBalancerSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -843,6 +819,7 @@ Outputs:
           - WSO2ISLoadBalancer
           - DNSName
         - ':443'
+    Description: IS HTTPS Gateway endpoint
 Parameters:
   AWSAccessKeyId:
     Type: String
@@ -919,7 +896,7 @@ Parameters:
       - db.m4.large
   DB:
     Type: String
-    Default: MySQL-5.6
+    Default: MySQL-5.7
     AllowedValues:
       - MySQL-5.6
       - MySQL-5.7
@@ -928,13 +905,6 @@ Parameters:
     Default: Ubuntu1804
     AllowedValues:
       - Ubuntu1804
-  ProductVersion:
-    Type: String
-    Default: 5.7.0
-    AllowedValues:
-      - 5.7.0
-      - 5.3.0
-      - 5.2.0            
 Mappings:
   WSO2PuppetMasterRegionMap:
     ap-southeast-2:
