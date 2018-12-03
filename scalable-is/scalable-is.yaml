@@ -217,7 +217,7 @@ Resources:
       Engine: !Select [0, !Split ["-", !Ref DB]]
       MasterUsername: !Ref DBUsername
       MasterUserPassword: !Ref DBPassword
-      MultiAZ: 'true'
+      MultiAZ: 'false'
       StorageType: gp2
       DBSubnetGroupName: !Ref WSO2ISDBSubnetGroup
   WSO2ISDBSubnetGroup:
@@ -277,6 +277,14 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 9200
+          ToPort: 9200
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: '8280'
@@ -363,7 +371,7 @@ Resources:
             - sed -i '/\[main\]/a dns_alt_names=puppetmaster,puppet' /etc/puppet/puppet.conf
             - sed -i '/\[master\]/a autosign=true' /etc/puppet/puppet.conf
             - service puppetmaster restart
-            - popd /home/ubuntu
+            - pushd /home/ubuntu
             - !Sub "./wso2-init.sh ${WUMUsername} ${WUMPassword} wso2is-5.7.0 ${InternalPrepareForTest}"
             - !Join
               - ''
@@ -490,50 +498,60 @@ Resources:
         - !Ref WSO2ISSecurityGroup
       UserData: !Base64
         'Fn::Sub': |
-                   #cloud-boothook
-                   #!/bin/bash
-                   export PATH=~/.local/bin:$PATH
-                   apt-get update
-                   sudo apt-get install python-pip -y
-                   pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
-                   apt-get install -y puppet
-                   apt-get install -y nfs-common
-                   sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
-                   export PuppetmasterIP=${PuppetMaster.PrivateIp}
-                   echo "$PuppetmasterIP puppet puppetmaster" >> /etc/hosts
-                   service puppet restart
-                   mkdir -p /mnt/efs
-                   mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs
-                   sleep 100
-                   export FACTER_profile=is570
-                   puppet agent -vt
-                   sleep 10
-                   if [ ! -d "/mnt/efs/server" ]; then
-                   	mkdir -p /mnt/efs/server
-                   	cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server /mnt/efs
-                   fi
-                   rm -rf  /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
-                   ln -s /mnt/efs/server /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
-                   if [ ! -d "/mnt/efs/tenants" ]; then
-                   	mkdir -p /mnt/efs/tenants
-                   	cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants /mnt/efs
-                   fi
-                   rm -rf /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
-                   ln -s /mnt/efs/tenants /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
-                   apt-get install -y python3-pip
-                   pip3 install boto3
-                   echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
-                   /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/bin/wso2server.sh start
-                   ${CustomUserData}
-                   echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
-                   cat /dev/null > ~/.bash_history && history -c
-                   end=$((SECONDS+600))
-                   while [ $SECONDS -lt $end ] ; do
-                       wget --delete-after --server-response --no-check-certificate "https://localhost:9443/carbon/admin/login.jsp"
-                       if [ $? -eq "0" ] ; then
-                        /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WSO2ISNode1AutoScalingGroup --region ${AWS::Region}
-                       fi
-                   done
+          #cloud-boothook
+          #!/bin/bash
+          export PATH=~/.local/bin:$PATH
+          apt-get update
+          apt install -y python-pip
+          pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
+          apt-get install -y puppet
+          apt-get install -y nfs-common
+          sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
+          export ProductVersion=5.7.0
+          sed -i "s/Product_Version/5.7.0/g" /home/ubuntu/logstash-6.5.1/logstash-IS.conf
+          sed -i "s^secret-key^${AWSAccessKeySecret}^g" /home/ubuntu/logstash-6.5.1/logstash-IS.conf
+          sed -i "s/access-key/${AWSAccessKeyId}/g" /home/ubuntu/logstash-6.5.1/logstash-IS.conf
+          sed -i "s^ELASTICSEARCH_ENDPOINT^${ElasticSearchEndpoint}^g" /home/ubuntu/logstash-6.5.1/logstash-IS.conf
+          export INSTANCEID=$(ec2metadata | grep -m 1 'instance-id:' | awk '{print $2}')
+          sed -i "s/INSTANCE_ID/$INSTANCEID/g" /home/ubuntu/logstash-6.5.1/logstash-IS.conf
+          sed -i "s/STACK_NAME/${AWS::StackName}/g" /home/ubuntu/logstash-6.5.1/logstash-IS.conf
+          sed -i "s/REGION_NAME/${AWS::Region}/g" /home/ubuntu/logstash-6.5.1/logstash-IS.conf
+          nohup /home/ubuntu/logstash-6.5.1/bin/logstash -f /home/ubuntu/logstash-6.5.1/logstash-IS.conf &
+          export PuppetmasterIP=${PuppetMaster.PrivateIp}
+          echo "$PuppetmasterIP puppet puppetmaster" >> /etc/hosts
+          service puppet restart
+          mkdir -p /mnt/efs
+          mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs
+          sleep 180
+          export FACTER_profile=is570
+          puppet agent -vt
+          sleep 10
+          if [ ! -d "/mnt/efs/server" ]; then
+              mkdir -p /mnt/efs/server
+              cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server /mnt/efs
+          fi
+          rm -rf  /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
+          ln -s /mnt/efs/server /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
+          if [ ! -d "/mnt/efs/tenants" ]; then
+              mkdir -p /mnt/efs/tenants
+              cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants /mnt/efs
+          fi
+          rm -rf /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
+          ln -s /mnt/efs/tenants /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
+          apt-get install -y python3-pip
+          pip3 install boto3
+          echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
+          /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/bin/wso2server.sh start
+          ${CustomUserData}
+          echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
+          cat /dev/null > ~/.bash_history && history -c
+          end=$((SECONDS+600))
+          while [ $SECONDS -lt $end ] ; do
+          wget --delete-after --server-response --no-check-certificate "https://localhost:9443/carbon/admin/login.jsp"
+          if [ $? -eq "0" ] ; then
+              /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WSO2ISNode1AutoScalingGroup --region ${AWS::Region}
+          fi
+          done
     DependsOn:
       - WSO2ISSecurityGroup
       - WSO2ISLoadBalancer
@@ -591,50 +609,60 @@ Resources:
         - !Ref WSO2ISSecurityGroup
       UserData: !Base64
         'Fn::Sub': |
-                   #cloud-boothook
-                   #!/bin/bash
-                   export PATH=~/.local/bin:$PATH
-                   apt-get update
-                   sudo apt-get install python-pip -y
-                   pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
-                   apt-get install -y puppet
-                   apt-get install -y nfs-common
-                   sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
-                   export PuppetmasterIP=${PuppetMaster.PrivateIp}
-                   echo "$PuppetmasterIP puppet puppetmaster" >> /etc/hosts
-                   service puppet restart
-                   mkdir -p /mnt/efs
-                   mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs
-                   sleep 100
-                   export FACTER_profile=is570
-                   puppet agent -vt
-                   sleep 10
-                   if [ ! -d "/mnt/efs/server" ]; then
-                   	mkdir -p /mnt/efs/server
-                   	cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server /mnt/efs
-                   fi
-                   rm -rf  /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
-                   ln -s /mnt/efs/server /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
-                   if [ ! -d "/mnt/efs/tenants" ]; then
-                   	mkdir -p /mnt/efs/tenants
-                   	cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants /mnt/efs
-                   fi
-                   rm -rf /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
-                   ln -s /mnt/efs/tenants /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
-                   apt-get install -y python3-pip
-                   pip3 install boto3
-                   echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
-                   /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/bin/wso2server.sh start
-                   ${CustomUserData}
-                   echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
-                   cat /dev/null > ~/.bash_history && history -c
-                   end=$((SECONDS+600))
-                   while [ $SECONDS -lt $end ] ; do
-                       wget --delete-after --server-response --no-check-certificate "https://localhost:9443/carbon/admin/login.jsp"
-                       if [ $? -eq "0" ] ; then
-                        /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WSO2ISNode2AutoScalingGroup --region ${AWS::Region}
-                       fi
-                   done
+          #cloud-boothook
+          #!/bin/bash
+          export PATH=~/.local/bin:$PATH
+          apt-get update
+          apt install -y python-pip
+          pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
+          apt-get install -y puppet
+          apt-get install -y nfs-common
+          sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
+          export ProductVersion=5.7.0
+          sed -i "s/Product_Version/5.7.0/g" /home/ubuntu/logstash-6.5.1/logstash-IS.conf
+          sed -i "s^secret-key^${AWSAccessKeySecret}^g" /home/ubuntu/logstash-6.5.1/logstash-IS.conf
+          sed -i "s/access-key/${AWSAccessKeyId}/g" /home/ubuntu/logstash-6.5.1/logstash-IS.conf
+          sed -i "s^ELASTICSEARCH_ENDPOINT^${ElasticSearchEndpoint}^g" /home/ubuntu/logstash-6.5.1/logstash-IS.conf
+          export INSTANCEID=$(ec2metadata | grep -m 1 'instance-id:' | awk '{print $2}')
+          sed -i "s/INSTANCE_ID/$INSTANCEID/g" /home/ubuntu/logstash-6.5.1/logstash-IS.conf
+          sed -i "s/STACK_NAME/${AWS::StackName}/g" /home/ubuntu/logstash-6.5.1/logstash-IS.conf
+          sed -i "s/REGION_NAME/${AWS::Region}/g" /home/ubuntu/logstash-6.5.1/logstash-IS.conf
+          nohup /home/ubuntu/logstash-6.5.1/bin/logstash -f /home/ubuntu/logstash-6.5.1/logstash-IS.conf &
+          export PuppetmasterIP=${PuppetMaster.PrivateIp}
+          echo "$PuppetmasterIP puppet puppetmaster" >> /etc/hosts
+          service puppet restart
+          mkdir -p /mnt/efs
+          mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs
+          sleep 300
+          export FACTER_profile=is570
+          puppet agent -vt
+          sleep 10
+          if [ ! -d "/mnt/efs/server" ]; then
+              mkdir -p /mnt/efs/server
+              cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server /mnt/efs
+          fi
+          rm -rf  /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
+          ln -s /mnt/efs/server /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
+          if [ ! -d "/mnt/efs/tenants" ]; then
+              mkdir -p /mnt/efs/tenants
+              cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants /mnt/efs
+          fi
+          rm -rf /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
+          ln -s /mnt/efs/tenants /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
+          apt-get install -y python3-pip
+          pip3 install boto3
+          echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
+          /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/bin/wso2server.sh start
+          ${CustomUserData}
+          echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
+          cat /dev/null > ~/.bash_history && history -c
+          end=$((SECONDS+600))
+          while [ $SECONDS -lt $end ] ; do
+          wget --delete-after --server-response --no-check-certificate "https://localhost:9443/carbon/admin/login.jsp"
+          if [ $? -eq "0" ] ; then
+              /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WSO2ISNode2AutoScalingGroup --region ${AWS::Region}
+          fi
+          done
     DependsOn:
       - WSO2ISSecurityGroup
       - WSO2ISLoadBalancer
@@ -905,6 +933,8 @@ Parameters:
     Default: Ubuntu1804
     AllowedValues:
       - Ubuntu1804
+  ElasticSearchEndpoint:
+    Type: String
 Mappings:
   WSO2PuppetMasterRegionMap:
     ap-southeast-2:
@@ -921,14 +951,14 @@ Mappings:
       Ubuntu1804: ami-01cf3b8e778a4b827
   WSO2ISAMIRegionMap:
     ap-southeast-2:
-      Ubuntu1804: ami-07a3bd4944eb120a0
+      Ubuntu1804: ami-05b0cd92df53d8b01
     eu-west-1:
-      Ubuntu1804: ami-00035f41c82244dab
+      Ubuntu1804: ami-001b442605bc38872
     us-east-1:
-      Ubuntu1804: ami-0ac019f4fcb7cb7e6
+      Ubuntu1804: ami-0305eacef0574b5fc
     us-east-2:
-      Ubuntu1804: ami-0f65671a86f061fcd
+      Ubuntu1804: ami-020cace0c1a31a53c
     us-west-1:
-      Ubuntu1804: ami-063aa838bd7631e0b
+      Ubuntu1804: ami-0f8b13ab717f3c2a9
     us-west-2:
-      Ubuntu1804: ami-0bbe6b35405ecebdb
+      Ubuntu1804: ami-09a8480d42833b320
