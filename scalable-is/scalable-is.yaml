@@ -311,6 +311,10 @@ Resources:
           ToPort: '4100'
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
+          FromPort: '5701'
+          ToPort: '5701'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
           FromPort: '8140'
           ToPort: '8140'
           CidrIp: 0.0.0.0/0
