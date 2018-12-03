@@ -25,10 +25,12 @@ Metadata:
           - AWSAccessKeySecret
           - KeyPairName
           - WSO2InstanceType
+          - BastionInstanceType
       - Label:
           default: Network Configuration
         Parameters:
           - CertificateName
+          - WSO2ISLoadBalancerScheme
       - Label:
           default: Database Credentials
         Parameters:
@@ -46,6 +48,8 @@ Metadata:
         default: AWS Access Secret Key
       CertificateName:
         default: SSL Certificate Name
+      WSO2ISLoadBalancerScheme:
+        default: Load Balancer Scheme
       KeyPairName:
         default: Key Pair Name
       DBUsername:
@@ -59,7 +63,9 @@ Metadata:
       WUMPassword:
         default: Password
       WSO2InstanceType:
-        default: Instance Type
+        default: WSO2 IS Instance Type
+      BastionInstanceType:
+        default: Bastion Instance Type
 Resources:
   # networking configurations
   WSO2ISVPC:
@@ -292,7 +298,7 @@ Resources:
         - WSO2ISAMIRegionMap
         - !Ref 'AWS::Region'
         - Ubuntu180464bit
-      InstanceType: t2.micro
+      InstanceType: !Ref BastionInstanceType
       KeyName: !Ref KeyPairName
       Monitoring: 'false'
       Tags:
@@ -710,6 +716,7 @@ Resources:
       Subnets:
         - !Ref WSO2ISPublicSubnet2
         - !Ref WSO2ISPublicSubnet1
+      Scheme: !Ref WSO2ISLoadBalancerScheme
       LBCookieStickinessPolicy:
         - PolicyName: LBStickyPolicy
       Listeners:
@@ -808,7 +815,23 @@ Parameters:
       - m3.xlarge
       - m3.2xlarge
       - m4.large
+      - c5.large
     ConstraintDescription: Must be a valid EC2 instance type
+  BastionInstanceType:
+      Type: String
+      Default: t2.micro
+      AllowedValues:
+        - t2.micro
+        - t2.medium
+        - t2.large
+        - t2.xlarge
+        - t2.2xlarge
+        - m3.medium
+        - m3.large
+        - m3.xlarge
+        - m3.2xlarge
+        - m4.large
+      ConstraintDescription: Must be a valid EC2 instance type
   WUMPassword:
     Type: String
     Default: ""
@@ -824,6 +847,14 @@ Parameters:
     Type: String
     MinLength: 8
     NoEcho: true
+  WSO2ISLoadBalancerScheme:
+    Description: Scheme type for the Load Balancer. [Use "internal" for a private ALB]
+    Type: String
+    Default: internet-facing
+    AllowedValues:
+      - internet-facing
+      - internal
+    ConstraintDescription: Must be a valid ALB scheme type
 Mappings:
   WSO2PuppetMasterRegionMap:
     ap-southeast-2:
