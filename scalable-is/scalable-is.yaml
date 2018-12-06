@@ -941,6 +941,7 @@ Parameters:
       - Ubuntu1804
   ElasticSearchEndpoint:
     Type: String
+    Default: ""
 Mappings:
   WSO2PuppetMasterRegionMap:
     ap-southeast-2:
