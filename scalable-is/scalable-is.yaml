@@ -73,7 +73,7 @@ Metadata:
       InternalPrepareForTest:
         default: Enable Test Mode
       CustomUserData:
-        default: Customer User Data
+        default: Custom User Data
       WUMUsername:
         default: Username
       WUMPassword:
