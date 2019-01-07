@@ -19,7 +19,7 @@ Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
       - Label:
-          default: Basic Configurations
+          default: Basic Configuration
         Parameters:
           - AWSAccessKeyId
           - AWSAccessKeySecret
@@ -31,7 +31,7 @@ Metadata:
           - WUMUsername
           - WUMPassword
       - Label:
-          default: Advanced Configurations
+          default: Advanced Configuration
         Parameters:
           - OperatingSystem
           - ProductVersion
@@ -39,32 +39,26 @@ Metadata:
           - DBAllocationStorage
           - DBInstanceType
           - CustomUserData
-          - JDK
-          - InternalPrepareForTest
           - ElasticSearchEndpoint
     ParameterLabels:
       AWSAccessKeyId:
-        default: AWS Access Key ID
+        default: AWS Access Key
       AWSAccessKeySecret:
-        default: AWS Access Secret Key
+        default: AWS Secret Key
       OperatingSystem:
         default: Operating System
       CertificateName:
         default: SSL Certificate Name
       KeyPairName:
-        default: Key Pair Name
+        default: Key Pair
       DBUsername:
-        default: DB Username
+        default: Database Username
       DBPassword:
-        default: DB Password
+        default: Database Password
       DBAllocationStorage:
-        default: Allocation Storage
+        default: Database Storage Allocation
       DBInstanceType:
-        default: DB Instance Type
-      JDK:
-        default: JDK
-      InternalPrepareForTest:
-        default: Enable Test Mode
+        default: Database Instance Type
       CustomUserData:
         default: Customer User Data
       WUMUsername:
@@ -384,7 +378,7 @@ Resources:
             - sed -i '/\[master\]/a autosign=true' /etc/puppet/puppet.conf
             - service puppetmaster restart
             - cd /home/ubuntu
-            - !Sub "./wso2-init.sh ${WUMUsername} ${WUMPassword} wso2is-5.7.0 ${InternalPrepareForTest}"
+            - !Sub "./wso2-init.sh ${WUMUsername} ${WUMPassword} wso2is-5.7.0 False"
             - !Join
               - ''
               - - sed -i "s/access-key/
@@ -432,11 +426,6 @@ Resources:
                 - !Ref AWSAccessKeySecret
                 - ^g" /etc/puppet/code/environments/production/modules/is570/manifests/params.pp
             - export DB_NAME=WSO2_IS_DB
-            - !Join
-              - ''
-              - - sed -i "s/JDK_TYPE/
-                - !Ref JDK
-                - /g" /etc/puppet/code/environments/production/modules/is570/manifests/params.pp
             - !Join
               - ''
               - - export DB_HOSTNAME=
@@ -988,19 +977,8 @@ Parameters:
   CustomUserData:
     Type: String
     Default: "echo"
-  JDK:
-    Type: String
-    Default: "OPEN_JDK8"
-    AllowedValues:
-      - "OPEN_JDK8"
-      - "ORACLE_JDK8"
-  InternalPrepareForTest:
-    Type: String
-    Default: "False"
-    AllowedValues:
-      - "False"
-      - "True"
   ElasticSearchEndpoint:
+    Description: Will be used to publish WSO2 carbon logs to the ElasticSearch endpoint
     Type: String
     Default: ""
   WUMPassword:
@@ -1043,7 +1021,6 @@ Parameters:
       - MySQL-5.6
       - Postgres-9.6
       - Postgres-10.5
-      - Oracle-SE2-12.1
       - SQLServer-SE-14.00
       - SQLServer-SE-13.00
   OperatingSystem:
@@ -1055,17 +1032,17 @@ Parameters:
 Mappings:
   WSO2PuppetMasterRegionMap:
     ap-southeast-2:
-      Ubuntu1804: ami-0bbe35fca93a02b4a
+      Ubuntu1804: ami-05e95283ef6b647d6
     eu-west-1:
-      Ubuntu1804: ami-094051b467ee7a82d
+      Ubuntu1804: ami-00441606d607dc491
     us-east-1:
-      Ubuntu1804: ami-06b5512847447dba6
+      Ubuntu1804: ami-0b9692de2f7fdcd39
     us-east-2:
-      Ubuntu1804: ami-058e5a72486c10db4
+      Ubuntu1804: ami-0acae242795c2be4c
     us-west-1:
-      Ubuntu1804: ami-02889614e19a43136
+      Ubuntu1804: ami-00a3ba3d5145c0dcf
     us-west-2:
-      Ubuntu1804: ami-0fb1efaba5ca4e735
+      Ubuntu1804: ami-0456205d95d30c287
   WSO2ISAMIRegionMap:
     ap-southeast-2:
       CentOS7: ami-08925bf709e8a8a07
