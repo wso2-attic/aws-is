@@ -31,7 +31,7 @@ Metadata:
           - WUMUsername
           - WUMPassword
       - Label:
-          default: Advanced Configuration
+          default: Advanced Configuration (Defaults will be used, if not set)
         Parameters:
           - OperatingSystem
           - ProductVersion
@@ -56,11 +56,11 @@ Metadata:
       DBPassword:
         default: Database Password
       DBAllocationStorage:
-        default: Database Storage Allocation
+        default: Database Storage
       DBInstanceType:
         default: Database Instance Type
       CustomUserData:
-        default: Customer User Data
+        default: Custom User Data
       WUMUsername:
         default: WSO2 Username
       WUMPassword:
@@ -68,7 +68,7 @@ Metadata:
       WSO2InstanceType:
         default: Instance Type
       DB:
-        default: Database
+        default: Database Engine and Version
       ElasticSearchEndpoint:
         default: ElasticSearch Endpoint
 
@@ -378,6 +378,8 @@ Resources:
             - sed -i '/\[master\]/a autosign=true' /etc/puppet/puppet.conf
             - service puppetmaster restart
             - cd /home/ubuntu
+            - git clone --single-branch --branch 5.7.x https://github.com/wso2/aws-is
+            - cp -r aws-is/Minimum-HA/puppet/is570 /etc/puppet/code/environments/production/modules/
             - !Sub "./wso2-init.sh ${WUMUsername} ${WUMPassword} wso2is-5.7.0 False"
             - !Join
               - ''

@@ -18,7 +18,7 @@
                     <password><%= @wso2_bps_db['password'] %></password>
                     <driverClassName><%= @wso2_bps_db['driver_class_name'] %></driverClassName>
                     <testOnBorrow>true</testOnBorrow>
-                    <validationQuery>SELECT 1</validationQuery>
+                    <validationQuery><%= @wso2_bps_db['validation_query'] %></validationQuery>
                     <validationInterval>30000</validationInterval>
                     <useDataSourceFactory>false</useDataSourceFactory>
 		    <defaultAutoCommit>true</defaultAutoCommit>

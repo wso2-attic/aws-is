@@ -24,8 +24,11 @@ class is570::params {
   $service_name = 'wso2is'
   $hostname = 'CF_ELB_DNS_NAME'
   $mgt_hostname = 'CF_ELB_DNS_NAME'
-  $jdk_version = 'JDK_TYPE'
   $enable_test_mode = 'ENABLE_TEST_MODE'
+  $jdk_version = 'JDK_TYPE'
+  $db_managment_system = 'CF_DBMS'
+  $oracle_sid = 'WSO2ISDB'
+  $db_password = 'CF_DB_PASSWORD'
   $aws_access_key = 'access-key'
   $aws_secret_key = 'secretkey'
   $aws_region = 'REGION_NAME'
@@ -62,41 +65,105 @@ class is570::params {
     $jdk_path = "jdk1.8.0_192"
   }
 
-  # Master-datasources.xml
+  # ----- Master-datasources config params -----
+
+  if $db_managment_system == 'mysql' {
+    $wso2_reg_db_name = 'CF_DB_USERNAME'
+    $wso2_bps_db_name = 'CF_DB_USERNAME'
+    $wso2_user_db_name = 'CF_DB_USERNAME'
+    $wso2_identity_db_name = 'CF_DB_USERNAME'
+    $wso2_consent_db_name = 'CF_DB_USERNAME'
+    $wso2_reg_db_url = 'jdbc:mysql://CF_RDS_URL:3306/WSO2IS_REG_DB?autoReconnect=true&amp;useSSL=false'
+    $wso2_bps_db_url = 'jdbc:mysql://CF_RDS_URL:3306/WSO2IS_BPS_DB?autoReconnect=true&amp;useSSL=false'
+    $wso2_user_db_url = 'jdbc:mysql://CF_RDS_URL:3306/WSO2IS_USER_DB?autoReconnect=true&amp;useSSL=false'
+    $wso2_identity_db_url = 'jdbc:mysql://CF_RDS_URL:3306/WSO2IS_IDENTITY_DB?autoReconnect=true&amp;useSSL=false'
+    $wso2_consent_db_url = 'jdbc:mysql://CF_RDS_URL:3306/WSO2IS_CONSENT_DB?autoReconnect=true&amp;useSSL=false'
+    $db_driver_class_name = 'com.mysql.jdbc.Driver'
+    $db_connector = 'mysql-connector-java-5.1.41-bin.jar'
+    $db_validation_query = 'SELECT 1'
+  } elsif $db_managment_system == 'oracle-se2' {
+    $wso2_reg_db_name = 'WSO2IS_REG_DB'
+    $wso2_bps_db_name = 'WSO2IS_BPS_DB'
+    $wso2_user_db_name = 'WSO2IS_USER_DB'
+    $wso2_identity_db_name = 'WSO2IS_IDENTITY_DB'
+    $wso2_consent_db_name = 'WSO2IS_CONSENT_DB'
+    $wso2_reg_db_url = "jdbc:oracle:thin:@CF_RDS_URL:1521/${oracle_sid}"
+    $wso2_bps_db_url = "jdbc:oracle:thin:@CF_RDS_URL:1521/${oracle_sid}"
+    $wso2_user_db_url = "jdbc:oracle:thin:@CF_RDS_URL:1521/${oracle_sid}"
+    $wso2_identity_db_url = "jdbc:oracle:thin:@CF_RDS_URL:1521/${oracle_sid}"
+    $wso2_consent_db_url = "jdbc:oracle:thin:@CF_RDS_URL:1521/${oracle_sid}"
+    $db_driver_class_name = 'oracle.jdbc.OracleDriver'
+    $db_validation_query = 'SELECT 1 FROM DUAL'
+    $db_connector = 'ojdbc8.jar'
+  } elsif $db_managment_system == 'sqlserver-se' {
+    $wso2_reg_db_name = 'CF_DB_USERNAME'
+    $wso2_bps_db_name = 'CF_DB_USERNAME'
+    $wso2_user_db_name = 'CF_DB_USERNAME'
+    $wso2_identity_db_name = 'CF_DB_USERNAME'
+    $wso2_consent_db_name = 'CF_DB_USERNAME'
+    $wso2_reg_db_url = 'jdbc:sqlserver://CF_RDS_URL:1433;databaseName=WSO2IS_REG_DB;SendStringParametersAsUnicode=false'
+    $wso2_bps_db_url = 'jdbc:sqlserver://CF_RDS_URL:1433;databaseName=WSO2IS_BPS_DB;SendStringParametersAsUnicode=false'
+    $wso2_user_db_url = 'jdbc:sqlserver://CF_RDS_URL:1433;databaseName=WSO2IS_USER_DB;SendStringParametersAsUnicode=false'
+    $wso2_identity_db_url = 'jdbc:sqlserver://CF_RDS_URL:1433;databaseName=WSO2IS_IDENTITY_DB;SendStringParametersAsUnicode=false'
+    $wso2_consent_db_url = 'jdbc:sqlserver://CF_RDS_URL:1433;databaseName=WSO2IS_CONSENT_DB;SendStringParametersAsUnicode=false'
+    $db_driver_class_name = 'com.microsoft.sqlserver.jdbc.SQLServerDriver'
+    $db_connector = 'mssql-jdbc-7.0.0.jre8.jar'
+    $db_validation_query = 'SELECT 1'
+  } elsif $db_managment_system == 'postgres' {
+    $wso2_reg_db_name = 'CF_DB_USERNAME'
+    $wso2_bps_db_name = 'CF_DB_USERNAME'
+    $wso2_user_db_name = 'CF_DB_USERNAME'
+    $wso2_identity_db_name = 'CF_DB_USERNAME'
+    $wso2_consent_db_name = 'CF_DB_USERNAME'
+    $wso2_reg_db_url = 'jdbc:postgresql://CF_RDS_URL:5432/WSO2IS_REG_DB'
+    $wso2_bps_db_url = 'jdbc:postgresql://CF_RDS_URL:5432/WSO2IS_BPS_DB'
+    $wso2_user_db_url = 'jdbc:postgresql://CF_RDS_URL:5432/WSO2IS_USER_DB'
+    $wso2_identity_db_url = 'jdbc:postgresql://CF_RDS_URL:5432/WSO2IS_IDENTITY_DB'
+    $wso2_consent_db_url = 'jdbc:postgresql://CF_RDS_URL:5432/WSO2IS_CONSENT_DB'
+    $db_driver_class_name = 'org.postgresql.Driver'
+    $db_connector = 'postgresql-42.2.5.jar'
+    $db_validation_query = 'SELECT 1; COMMIT'
+  }
+
   $wso2_reg_db = {
-    url               => 'jdbc:mysql://CF_RDS_URL:3306/WSO2IS_REG_DB?autoReconnect=true&amp;useSSL=false',
-    username          => 'CF_DB_USERNAME',
-    password          => 'CF_DB_PASSWORD',
-    driver_class_name => 'com.mysql.jdbc.Driver',
+    url               => $wso2_reg_db_url,
+    username          => $wso2_reg_db_name,
+    password          => $db_password,
+    driver_class_name => $db_driver_class_name,
+    validation_query  => $db_validation_query,
   }
 
   $wso2_bps_db = {
-    url               => 'jdbc:mysql://CF_RDS_URL:3306/WSO2IS_BPS_DB?autoReconnect=true&amp;useSSL=false',
-    username          => 'CF_DB_USERNAME',
-    password          => 'CF_DB_PASSWORD',
-    driver_class_name => 'com.mysql.jdbc.Driver',
+    url               => $wso2_bps_db_url,
+    username          => $wso2_bps_db_name,
+    password          => $db_password,
+    driver_class_name => $db_driver_class_name,
+    validation_query  => $db_validation_query,
   }
 
 
   $wso2_user_db = {
-    url               => 'jdbc:mysql://CF_RDS_URL:3306/WSO2IS_USER_DB?autoReconnect=true&amp;useSSL=false',
-    username          => 'CF_DB_USERNAME',
-    password          => 'CF_DB_PASSWORD',
-    driver_class_name => 'com.mysql.jdbc.Driver',
+    url               => $wso2_user_db_url,
+    username          => $wso2_user_db_name,
+    password          => $db_password,
+    driver_class_name => $db_driver_class_name,
+    validation_query  => $db_validation_query,
   }
 
   $wso2_identity_db = {
-    url               => 'jdbc:mysql://CF_RDS_URL:3306/WSO2IS_IDENTITY_DB?autoReconnect=true&amp;useSSL=false',
-    username          => 'CF_DB_USERNAME',
-    password          => 'CF_DB_PASSWORD',
-    driver_class_name => 'com.mysql.jdbc.Driver',
+    url               => $wso2_identity_db_url,
+    username          => $wso2_identity_db_name,
+    password          => $db_password,
+    driver_class_name => $db_driver_class_name,
+    validation_query  => $db_validation_query,
   }
 
   $wso2_consent_db = {
-    url               => 'jdbc:mysql://CF_RDS_URL:3306/WSO2IS_CONSENT_DB?autoReconnect=true&amp;useSSL=false',
-    username          => 'CF_DB_USERNAME',
-    password          => 'CF_DB_PASSWORD',
-    driver_class_name => 'com.mysql.jdbc.Driver',
+    url               => $wso2_consent_db_url,
+    username          => $wso2wso2_consent_db_name,
+    password          => $db_password,
+    driver_class_name => $db_driver_class_name,
+    validation_query  => $db_validation_query,
   }
 
   # Carbon.xml

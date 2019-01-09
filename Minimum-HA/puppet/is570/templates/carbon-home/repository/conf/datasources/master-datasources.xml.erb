@@ -43,7 +43,7 @@
                     <maxWait>60000</maxWait>
                     <minIdle>5</minIdle>
                     <testOnBorrow>true</testOnBorrow>
-                    <validationQuery>SELECT 1</validationQuery>
+                    <validationQuery><%= @wso2_reg_db['validation_query'] %></validationQuery>
                     <validationInterval>30000</validationInterval>
                     <defaultAutoCommit>false</defaultAutoCommit>
                 </configuration>
@@ -66,7 +66,7 @@
                     <maxWait>60000</maxWait>
                     <minIdle>5</minIdle>
                     <testOnBorrow>true</testOnBorrow>
-                    <validationQuery>SELECT 1</validationQuery>
+                    <validationQuery><%= @wso2_user_db['validation_query'] %></validationQuery>
                     <validationInterval>30000</validationInterval>
                     <defaultAutoCommit>false</defaultAutoCommit>
                 </configuration>
@@ -89,7 +89,7 @@
                     <maxWait>60000</maxWait>
                     <minIdle>5</minIdle>
                     <testOnBorrow>true</testOnBorrow>
-                    <validationQuery>SELECT 1</validationQuery>
+                    <validationQuery><%= @wso2_identity_db['validation_query'] %></validationQuery>
                     <validationInterval>30000</validationInterval>
                     <defaultAutoCommit>false</defaultAutoCommit>
                 </configuration>
@@ -112,7 +112,7 @@
                     <maxWait>60000</maxWait>
                     <minIdle>5</minIdle>
                     <testOnBorrow>true</testOnBorrow>
-                    <validationQuery>SELECT 1</validationQuery>
+                    <validationQuery><%= @wso2_consent_db['validation_query'] %></validationQuery>
                     <validationInterval>30000</validationInterval>
                     <defaultAutoCommit>false</defaultAutoCommit>
                 </configuration>
