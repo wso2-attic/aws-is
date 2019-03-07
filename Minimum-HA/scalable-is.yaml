@@ -31,7 +31,7 @@ Metadata:
           - WUMUsername
           - WUMPassword
       - Label:
-          default: Advanced Configuration (Defaults will be used, if not set)
+          default: Advanced Configuration
         Parameters:
           - OperatingSystem
           - ProductVersion
@@ -39,28 +39,35 @@ Metadata:
           - DBAllocationStorage
           - DBInstanceType
           - CustomUserData
+          - JDK
+          - InternalPrepareForTest
           - ElasticSearchEndpoint
+          - ElasticSearchRegion
     ParameterLabels:
       AWSAccessKeyId:
-        default: AWS Access Key
+        default: AWS Access Key ID
       AWSAccessKeySecret:
-        default: AWS Secret Key
+        default: AWS Access Secret Key
       OperatingSystem:
         default: Operating System
       CertificateName:
         default: SSL Certificate Name
       KeyPairName:
-        default: Key Pair
+        default: Key Pair Name
       DBUsername:
         default: Database Username
       DBPassword:
         default: Database Password
       DBAllocationStorage:
-        default: Database Storage
+        default: Database Allocation Storage
       DBInstanceType:
         default: Database Instance Type
+      JDK:
+        default: JDK
+      InternalPrepareForTest:
+        default: Enable Test Mode
       CustomUserData:
-        default: Custom User Data
+        default: Custom Userdata
       WUMUsername:
         default: WSO2 Username
       WUMPassword:
@@ -68,10 +75,11 @@ Metadata:
       WSO2InstanceType:
         default: Instance Type
       DB:
-        default: Database Engine and Version
+        default: Database
       ElasticSearchEndpoint:
         default: ElasticSearch Endpoint
-
+      ElasticSearchRegion:
+        default: ElasticSearch Region
 Resources:
   # networking configurations
   WSO2ISVPC:
@@ -344,6 +352,10 @@ Resources:
             - !Ref BastionSecurityGroup
   PuppetMaster:
     Type: 'AWS::EC2::Instance'
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT20M
     Properties:
       DisableApiTermination: 'false'
       InstanceInitiatedShutdownBehavior: stop
@@ -352,6 +364,12 @@ Resources:
         - !Ref 'AWS::Region'
         - Ubuntu1804
       InstanceType: !Ref WSO2InstanceType
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: '50'
+            VolumeType: gp2
+            DeleteOnTermination: 'true'
       KeyName: !Ref KeyPairName
       Monitoring: 'false'
       Tags:
@@ -369,18 +387,51 @@ Resources:
           - |+
 
           - - '#!/bin/bash'
+            - exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+            - apt-get update
+            - apt-get -y install python-setuptools python-pip
+            - pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
             - 'export PATH=~/.local/bin:$PATH'
             - echo "> Set hostname to puppetmaster"
             - hostname puppetmaster
             - echo $(hostname) >> /etc/hostname
             - echo "127.0.0.1 $(hostname)" >> /etc/hosts
+            - !Join
+              - ''
+              - - sed -i "s/access-key/
+                - !Ref AWSAccessKeyId
+                - /g" /usr/lib/logstash-6.5.1/logstash-PUPPETMASTER.conf
+            - !Join
+              - ''
+              - - sed -i "s/REGION_NAME/
+                - !Ref ElasticSearchRegion
+                - /g" /usr/lib/logstash-6.5.1/logstash-PUPPETMASTER.conf
+            - !Join
+              - ''
+              - - sed -i "s^secret-key^
+                - !Ref AWSAccessKeySecret
+                - ^g" /usr/lib/logstash-6.5.1/logstash-PUPPETMASTER.conf
+            - !Join
+              - ''
+              - - sed -i "s^STACK_NAME^
+                - !Ref AWS::StackName
+                - ^g" /usr/lib/logstash-6.5.1/logstash-PUPPETMASTER.conf
+            - !Join
+              - ''
+              - - sed -i "s^ELASTICSEARCH_ENDPOINT^
+                - !Ref ElasticSearchEndpoint
+                - ^g" /usr/lib/logstash-6.5.1/logstash-PUPPETMASTER.conf
+            - export INSTANCEID=$(ec2metadata | grep -m 1 'instance-id:' | awk '{print $2}')
+            - sed -i "s/INSTANCE_ID/$INSTANCEID/g" /usr/lib/logstash-6.5.1/logstash-PUPPETMASTER.conf
+            - apt-get update
+            - apt install openjdk-8-jre-headless -y
+            - nohup /usr/lib/logstash-6.5.1/bin/logstash -f /usr/lib/logstash-6.5.1/logstash-PUPPETMASTER.conf & >> /home/ubuntu/elastic.log
             - sed -i '/\[main\]/a dns_alt_names=puppetmaster,puppet' /etc/puppet/puppet.conf
             - sed -i '/\[master\]/a autosign=true' /etc/puppet/puppet.conf
             - service puppetmaster restart
             - cd /home/ubuntu
-            - git clone --single-branch --branch 5.7.x https://github.com/wso2/aws-is
-            - cp -r aws-is/Minimum-HA/puppet/is570 /etc/puppet/code/environments/production/modules/
-            - !Sub "./wso2-init.sh ${WUMUsername} ${WUMPassword} wso2is-5.7.0 False"
+            - !Sub "./wso2-init.sh '${WUMUsername}' '${WUMPassword}' wso2is-5.7.0 ${InternalPrepareForTest}"
+            - !Sub "/usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource PuppetMaster --region ${AWS::Region}"
             - !Join
               - ''
               - - sed -i "s/access-key/
@@ -430,6 +481,11 @@ Resources:
             - export DB_NAME=WSO2_IS_DB
             - !Join
               - ''
+              - - sed -i "s/JDK_TYPE/
+                - !Ref JDK
+                - /g" /etc/puppet/code/environments/production/modules/is570/manifests/params.pp
+            - !Join
+              - ''
               - - export DB_HOSTNAME=
                 - !GetAtt
                   - WSO2ISDBInstance
@@ -452,32 +508,42 @@ Resources:
               - ''
               - - sed -i "s/CF_DB_USERNAME/
                 - !Ref DBUsername
-                - /g" /usr/local/bin/provision_db_is_570.sh
+                - /g" /usr/local/bin/provision_db_is.sh
             - !Join
               - ''
               - - sed -i "s/CF_DB_PASSWORD/
                 - !Ref DBPassword
-                - /g" /usr/local/bin/provision_db_is_570.sh
+                - /g" /usr/local/bin/provision_db_is.sh
             - !Join
               - ''
               - - sed -i "s/CF_DB_HOST/
                 - !GetAtt
                   - WSO2ISDBInstance
                   - Endpoint.Address
-                - /g" /usr/local/bin/provision_db_is_570.sh
+                - /g" /usr/local/bin/provision_db_is.sh
             - !Join
               - ''
               - - sed -i "s/CF_DB_PORT/
                 - !GetAtt
                   - WSO2ISDBInstance
                   - Endpoint.Port
-                - /g" /usr/local/bin/provision_db_is_570.sh
+                - /g" /usr/local/bin/provision_db_is.sh
             - !Join
               - ''
-              - - sed -i "s/CF_DBMS/
+              - - sed -i "s/CF_DBMS_NAME/
                 - !Select [0, !Split ["_", !FindInMap [ DBEngineMap, !Ref DB, DBEngine]]]
-                - /g" /usr/local/bin/provision_db_is_570.sh
-            - bash /usr/local/bin/provision_db_is_570.sh
+                - /g" /usr/local/bin/provision_db_is.sh
+            - !Join
+              - ''
+              - - sed -i "s/CF_DBMS_VERSION/
+                - !Select [1, !Split ["_", !FindInMap [ DBEngineMap, !Ref DB, DBEngine]]]
+                - /g" /usr/local/bin/provision_db_is.sh
+            - !Join
+              - ''
+              - - sed -i "s/CF_PRODUCT_VERSION/
+                - 5.7.0
+                - /g" /usr/local/bin/provision_db_is.sh
+            - bash /usr/local/bin/provision_db_is.sh
   PuppetMasterSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
@@ -491,6 +557,10 @@ Resources:
         - IpProtocol: tcp
           FromPort: '8140'
           ToPort: '8140'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 9200
+          ToPort: 9200
           CidrIp: 0.0.0.0/0
   WSO2ISNode1LaunchConfiguration:
     Type: 'AWS::AutoScaling::LaunchConfiguration'
@@ -538,43 +608,45 @@ Resources:
               sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
           fi
           if [[ ${OperatingSystem} == "CentOS7" ]]; then
-              yum install -y epel-release unzip nfs-utils
+              yum install -y epel-release zip unzip nfs-utils
               yum install -y python-pip
               rpm -Uvh https://yum.puppetlabs.com/puppet5/puppet5-release-el-7.noarch.rpm
               yum install -y puppet-agent
               echo $'[main]\nserver = puppet\ncertname = agent1\nenvironment = production\n\runinterval = 1h' > /etc/puppetlabs/puppet/puppet.conf
           fi
           pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
+          wget https://s3.amazonaws.com/wso2logarchiever/log_archiver/log_archiver.sh
+          mv log_archiver.sh /usr/lib/
           export ProductVersion=5.7.0
           sed -i "s/Product_Version/5.7.0/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           sed -i "s^secret-key^${AWSAccessKeySecret}^g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           sed -i "s/access-key/${AWSAccessKeyId}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           sed -i "s^ELASTICSEARCH_ENDPOINT^${ElasticSearchEndpoint}^g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          export INSTANCEID=$(ec2metadata | grep -m 1 'instance-id:' | awk '{print $2}')
+          export INSTANCEID=$(wget -q -O - http://169.254.169.254/latest/meta-data/instance-id)
           sed -i "s/INSTANCE_ID/$INSTANCEID/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           sed -i "s/STACK_NAME/${AWS::StackName}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          sed -i "s/REGION_NAME/${AWS::Region}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
+          sed -i "s/REGION_NAME/${ElasticSearchRegion}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           nohup /usr/lib/logstash-6.5.1/bin/logstash -f /usr/lib/logstash-6.5.1/logstash-IS.conf &
           export PuppetmasterIP=${PuppetMaster.PrivateIp}
           echo "$PuppetmasterIP puppet puppetmaster" >> /etc/hosts
           service puppet restart
           mkdir -p /mnt/efs
           mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs
-          sleep 280
+          sleep 100
           export FACTER_profile=is570
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
-              puppet agent -vt
+              puppet agent -vt >> /var/log/puppetlog.log
           fi
           if [[ ${OperatingSystem} == "CentOS7" ]]; then
-              /opt/puppetlabs/bin/puppet agent -vt
+              /opt/puppetlabs/bin/puppet agent -vt >> /var/log/puppetlog.log
           fi
           sleep 10
-          if [ ! -d "/mnt/efs/server" ]; then
-              mkdir -p /mnt/efs/server
-              cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server /mnt/efs
+          if [ ! -d "/mnt/efs/server/userstores" ]; then
+              mkdir -p /mnt/efs/server/userstores
+              cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server/userstores /mnt/efs/userstores
           fi
-          rm -rf  /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
-          ln -s /mnt/efs/server /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
+          rm -rf  /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server/userstores
+          ln -s /mnt/efs/server/userstores /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server/userstores
           if [ ! -d "/mnt/efs/tenants" ]; then
               mkdir -p /mnt/efs/tenants
               cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants /mnt/efs
@@ -636,7 +708,7 @@ Resources:
     CreationPolicy:
       ResourceSignal:
         Count: 1
-        Timeout: PT35M
+        Timeout: PT20M
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MaxBatchSize: '2'
@@ -693,22 +765,24 @@ Resources:
               sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
           fi
           if [[ ${OperatingSystem} == "CentOS7" ]]; then
-              yum install -y epel-release unzip nfs-utils
+              yum install -y epel-release zip unzip nfs-utils
               yum install -y python-pip
               rpm -Uvh https://yum.puppetlabs.com/puppet5/puppet5-release-el-7.noarch.rpm
               yum install -y puppet-agent
               echo $'[main]\nserver = puppet\ncertname = agent2\nenvironment = production\n\runinterval = 1h' > /etc/puppetlabs/puppet/puppet.conf
           fi
           pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
+          wget https://s3.amazonaws.com/wso2logarchiever/log_archiver/log_archiver.sh
+          mv log_archiver.sh /usr/lib/
           export ProductVersion=5.7.0
           sed -i "s/Product_Version/5.7.0/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           sed -i "s^secret-key^${AWSAccessKeySecret}^g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           sed -i "s/access-key/${AWSAccessKeyId}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           sed -i "s^ELASTICSEARCH_ENDPOINT^${ElasticSearchEndpoint}^g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          export INSTANCEID=$(ec2metadata | grep -m 1 'instance-id:' | awk '{print $2}')
+          export INSTANCEID=$(wget -q -O - http://169.254.169.254/latest/meta-data/instance-id)
           sed -i "s/INSTANCE_ID/$INSTANCEID/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           sed -i "s/STACK_NAME/${AWS::StackName}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          sed -i "s/REGION_NAME/${AWS::Region}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
+          sed -i "s/REGION_NAME/${ElasticSearchRegion}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           nohup /usr/lib/logstash-6.5.1/bin/logstash -f /usr/lib/logstash-6.5.1/logstash-IS.conf &
           export PuppetmasterIP=${PuppetMaster.PrivateIp}
           echo "$PuppetmasterIP puppet puppetmaster" >> /etc/hosts
@@ -718,18 +792,18 @@ Resources:
           sleep 300
           export FACTER_profile=is570
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
-              puppet agent -vt
+              puppet agent -vt >> /var/log/puppetlog.log
           fi
           if [[ ${OperatingSystem} == "CentOS7" ]]; then
-              /opt/puppetlabs/bin/puppet agent -vt
+              /opt/puppetlabs/bin/puppet agent -vt >> /var/log/puppetlog.log
           fi
           sleep 10
-          if [ ! -d "/mnt/efs/server" ]; then
-              mkdir -p /mnt/efs/server
-              cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server /mnt/efs
+          if [ ! -d "/mnt/efs/server/userstores" ]; then
+              mkdir -p /mnt/efs/server/userstores
+              cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server/userstores /mnt/efs/userstores
           fi
-          rm -rf  /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
-          ln -s /mnt/efs/server /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server
+          rm -rf  /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server/userstores
+          ln -s /mnt/efs/server/userstores /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server/userstores
           if [ ! -d "/mnt/efs/tenants" ]; then
               mkdir -p /mnt/efs/tenants
               cp -r /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants /mnt/efs
@@ -791,7 +865,7 @@ Resources:
     CreationPolicy:
       ResourceSignal:
         Count: 1
-        Timeout: PT35M
+        Timeout: PT20M
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MaxBatchSize: '2'
@@ -979,8 +1053,19 @@ Parameters:
   CustomUserData:
     Type: String
     Default: "echo"
+  JDK:
+    Type: String
+    Default: "OPEN_JDK8"
+    AllowedValues:
+      - "OPEN_JDK8"
+      - "CORRETTO_JDK8"
+  InternalPrepareForTest:
+    Type: String
+    Default: "False"
+    AllowedValues:
+      - "False"
+      - "True"
   ElasticSearchEndpoint:
-    Description: Will be used to publish WSO2 carbon logs to the ElasticSearch endpoint
     Type: String
     Default: ""
   WUMPassword:
@@ -1019,51 +1104,63 @@ Parameters:
     Type: String
     Default: MySQL-5.7
     AllowedValues:
-      - MySQL-5.7
       - MySQL-5.6
+      - MySQL-5.7
       - Postgres-9.6
       - Postgres-10.5
-      - SQLServer-SE-14.00
+      - Oracle-SE1-11.2
+      - Oracle-SE2-12.1
       - SQLServer-SE-13.00
+      - SQLServer-SE-14.00
   OperatingSystem:
     Type: String
     Default: Ubuntu1804
     AllowedValues:
       - Ubuntu1804
       - CentOS7
+  ElasticSearchRegion:
+    Type: String
+    Default: "us-east-1"
+    AllowedValues:
+      - "us-east-1"
+      - "us-east-2"
+      - "us-west-1"
+      - "us-west-2"
+      - "ap-southeast-2"
+      - "eu-west-1"
 Mappings:
   WSO2PuppetMasterRegionMap:
     ap-southeast-2:
-      Ubuntu1804: ami-05e95283ef6b647d6
+      Ubuntu1804: ami-0fc09618579187e6c
     eu-west-1:
-      Ubuntu1804: ami-00441606d607dc491
+      Ubuntu1804: ami-02b39c89f3d1e6cc8
     us-east-1:
-      Ubuntu1804: ami-0b9692de2f7fdcd39
+      Ubuntu1804: ami-001d7b482b249e6c0
     us-east-2:
-      Ubuntu1804: ami-0acae242795c2be4c
+      Ubuntu1804: ami-0e9d2c41b8f919972
     us-west-1:
-      Ubuntu1804: ami-00a3ba3d5145c0dcf
+      Ubuntu1804: ami-075cfeb3445b4b54f
     us-west-2:
-      Ubuntu1804: ami-0456205d95d30c287
+      Ubuntu1804: ami-0f0e6af43a9df1a52
   WSO2ISAMIRegionMap:
     ap-southeast-2:
-      CentOS7: ami-08925bf709e8a8a07
-      Ubuntu1804: ami-01b644a7b457ee217
+      CentOS7: ami-0211f0ecd0e693937
+      Ubuntu1804: ami-0fc37bfc486b80d6d
     eu-west-1:
-      CentOS7: ami-09366c28423a1c1f6
-      Ubuntu1804: ami-00287e39ddda4e02d
+      CentOS7: ami-08137d567f9e9413e
+      Ubuntu1804: ami-005de30fe41bbe8f3
     us-east-1:
-      CentOS7: ami-0adcd9752e440d0f9
-      Ubuntu1804: ami-0b74d3aedcf73087c
+      CentOS7: ami-0903f4ad60fe4bd68
+      Ubuntu1804: ami-025672766b28e3365
     us-east-2:
-      CentOS7: ami-028f6e82e4d21dc17
-      Ubuntu1804: ami-0711a1be44e9a7c0b
+      CentOS7: ami-009ac95229cc07041
+      Ubuntu1804: ami-0a1af21a7b34de8f7
     us-west-1:
-      CentOS7: ami-06984a5b470ca1ba1
-      Ubuntu1804: ami-0477ea2787bb8898f
+      CentOS7: ami-0062ecf9cd0c8417d
+      Ubuntu1804: ami-02cfec9ab1330bcbb
     us-west-2:
-      CentOS7: ami-003dd6436d67bb1a3
-      Ubuntu1804: ami-0a695960d3d986461
+      CentOS7: ami-0cbe0a37066de0538
+      Ubuntu1804: ami-0cc3da810abe655e0
   DBEngineMap:
     MySQL-5.7:
       DBEngine: "mysql_5.7"
@@ -1077,9 +1174,10 @@ Mappings:
       DBEngine: "sqlserver-se_13.00"
     SQLServer-SE-14.00:
       DBEngine: "sqlserver-se_14.00"
+    Oracle-SE1-11.2:
+      DBEngine: "oracle-se1_11.2"
     Oracle-SE2-12.1:
       DBEngine: "oracle-se2_12.1"
 Conditions:
   UseSQLServerDB: !Equals [sqlserver-se, !Select [0, !Split ["_", !FindInMap [ DBEngineMap, !Ref DB, DBEngine]]]]
-  UseOracleDB: !Equals [oracle-se2, !Select [0, !Split ["_", !FindInMap [ DBEngineMap, !Ref DB, DBEngine]]]]
-  UseLicensedVersion: !Or [ !Equals [sqlserver-se, !Select [0, !Split ["_", !FindInMap [ DBEngineMap, !Ref DB, DBEngine]]]], !Equals [oracle-se2, !Select [0, !Split ["_", !FindInMap [ DBEngineMap, !Ref DB, DBEngine]]]] ]
+  UseLicensedVersion: !Or [ !Equals [sqlserver, !Select [0, !Split ["-", !FindInMap [ DBEngineMap, !Ref DB, DBEngine]]]], !Equals [oracle, !Select [0, !Split ["-", !FindInMap [ DBEngineMap, !Ref DB, DBEngine]]]] ]
