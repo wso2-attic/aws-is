@@ -336,7 +336,6 @@ Resources:
           Value: WSO2BastionInstance
       NetworkInterfaces:
         - DeleteOnTermination: 'true'
-          PrivateIpAddress: '10.0.254.5'
           AssociatePublicIpAddress : 'true'
           Description: Primary network interface
           DeviceIndex: 0

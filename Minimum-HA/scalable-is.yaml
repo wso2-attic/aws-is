@@ -175,16 +175,7 @@ Resources:
         - WSO2ISEIP
         - AllocationId
       SubnetId: !Ref WSO2ISPublicSubnet1
-  WSO2BastionEIPAssociation:
-    Type: 'AWS::EC2::EIPAssociation'
-    Properties:
-      AllocationId: !GetAtt WSO2BastionEIP.AllocationId
-      InstanceId: !Ref WSO2BastionInstance
   WSO2ISEIP:
-    Type: 'AWS::EC2::EIP'
-    Properties:
-      Domain: vpc
-  WSO2BastionEIP:
     Type: 'AWS::EC2::EIP'
     Properties:
       Domain: vpc
@@ -345,6 +336,7 @@ Resources:
           Value: WSO2BastionInstance
       NetworkInterfaces:
         - DeleteOnTermination: 'true'
+          AssociatePublicIpAddress : 'true'
           Description: Primary network interface
           DeviceIndex: 0
           SubnetId: !Ref WSO2ISPublicSubnet1
@@ -1088,6 +1080,7 @@ Parameters:
     Type: Number
     Default: 20
   DBInstanceType:
+    Description: If the selected DB Engine is "SQL Server", please use "db.m4.large" as instance type
     Type: String
     Default: db.t2.medium
     AllowedValues:
