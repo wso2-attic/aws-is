@@ -45,7 +45,7 @@ Metadata:
           - ElasticSearchRegion
     ParameterLabels:
       AWSAccessKeyId:
-        default: AWS Access Key ID
+        default: AWS Access Key
       AWSAccessKeySecret:
         default: AWS Access Secret Key
       OperatingSystem:
