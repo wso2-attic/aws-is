@@ -1128,7 +1128,7 @@ Mappings:
     eu-west-1:
       Ubuntu1804: ami-02b39c89f3d1e6cc8
     us-east-1:
-      Ubuntu1804: ami-001d7b482b249e6c0
+      Ubuntu1804: ami-017bb6968f2172b8c
     us-east-2:
       Ubuntu1804: ami-0e9d2c41b8f919972
     us-west-1:
@@ -1138,13 +1138,13 @@ Mappings:
   WSO2ISAMIRegionMap:
     ap-southeast-2:
       CentOS7: ami-0211f0ecd0e693937
-      Ubuntu1804: ami-0fc37bfc486b80d6d
+      Ubuntu1804: ami-011b6cb637fe7e077
     eu-west-1:
       CentOS7: ami-08137d567f9e9413e
       Ubuntu1804: ami-005de30fe41bbe8f3
     us-east-1:
-      CentOS7: ami-0903f4ad60fe4bd68
-      Ubuntu1804: ami-025672766b28e3365
+      CentOS7: ami-09d4e63ccc46083c7
+      Ubuntu1804: ami-02a2048d0e4afcd10
     us-east-2:
       CentOS7: ami-009ac95229cc07041
       Ubuntu1804: ami-0a1af21a7b34de8f7
