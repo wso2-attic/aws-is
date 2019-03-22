@@ -712,14 +712,14 @@ Resources:
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
               apt-get update
               apt install -y puppet nfs-common
-              apt install -y python3-pip
-              pip3 install boto3
               apt install -y python-pip
+              pip install boto3
               sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
           fi
           if [[ ${OperatingSystem} == "CentOS7" ]]; then
               yum install -y epel-release zip unzip nfs-utils
               yum install -y python-pip
+              pip install boto3
               rpm -Uvh https://yum.puppetlabs.com/puppet5/puppet5-release-el-7.noarch.rpm
               yum install -y puppet-agent
               echo $'[main]\nserver = puppet\ncertname = agent1\nenvironment = production\n\runinterval = 1h' > /etc/puppetlabs/puppet/puppet.conf
@@ -766,7 +766,7 @@ Resources:
           ln -s /mnt/efs/tenants /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
           echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
           sleep 30
-          export ANALYTICS_IP=$(python3 /usr/local/bin/private_ip_extractor.py ${AWS::Region} ${AWSAccessKeyId} ${AWSAccessKeySecret} WSO2ISAnalyticsWorker)
+          export ANALYTICS_IP=$(python /usr/local/bin/private_ip_extractor.py ${AWS::Region} ${AWSAccessKeyId} ${AWSAccessKeySecret} WSO2ISAnalyticsWorker)
           sed -i "s/CF_ANALYTICS_IP/$ANALYTICS_IP/g" /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-SessionData.xml
           sed -i "s/CF_ANALYTICS_IP/$ANALYTICS_IP/g" /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-AuthenticationData.xml
           sed -i "s/CF_ANALYTICS_IP/$ANALYTICS_IP/g" /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-RoleData.xml
@@ -883,13 +883,13 @@ Resources:
               apt-get update
               apt install -y puppet nfs-common
               apt install -y python-pip
-              apt install -y python3-pip
-              pip3 install boto3
+              pip install boto3
               sed -i '/\[main\]/a server=puppet' /etc/puppet/puppet.conf
           fi
           if [[ ${OperatingSystem} == "CentOS7" ]]; then
               yum install -y epel-release zip unzip nfs-utils
               yum install -y python-pip
+              pip install boto3
               rpm -Uvh https://yum.puppetlabs.com/puppet5/puppet5-release-el-7.noarch.rpm
               yum install -y puppet-agent
               echo $'[main]\nserver = puppet\ncertname = agent2\nenvironment = production\n\runinterval = 1h' > /etc/puppetlabs/puppet/puppet.conf
@@ -936,7 +936,7 @@ Resources:
           ln -s /mnt/efs/tenants /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/tenants
           echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
           sleep 30
-          export ANALYTICS_IP=$(python3 /usr/local/bin/private_ip_extractor.py ${AWS::Region} ${AWSAccessKeyId} ${AWSAccessKeySecret} WSO2ISAnalyticsWorker)
+          export ANALYTICS_IP=$(python /usr/local/bin/private_ip_extractor.py ${AWS::Region} ${AWSAccessKeyId} ${AWSAccessKeySecret} WSO2ISAnalyticsWorker)
           sed -i "s/CF_ANALYTICS_IP/$ANALYTICS_IP/g" /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-SessionData.xml
           sed -i "s/CF_ANALYTICS_IP/$ANALYTICS_IP/g" /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-AuthenticationData.xml
           sed -i "s/CF_ANALYTICS_IP/$ANALYTICS_IP/g" /usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-RoleData.xml
@@ -1240,7 +1240,6 @@ Resources:
           if [[ ${OperatingSystem} == "CentOS7" ]]; then
               /usr/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WSO2ISAnalyticsWorkerAutoScalingGroup --region ${AWS::Region}
           fi
-          /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WSO2ISAnalyticsWorkerAutoScalingGroup --region ${AWS::Region}
           echo 'export HISTTIMEFORMAT="%F %T "' >> /etc/profile.d/history.sh
           cat /dev/null > ~/.bash_history && history -c
     DependsOn:
@@ -1536,6 +1535,7 @@ Resources:
       SslPolicy: ELBSecurityPolicy-TLS-1-1-2017-01
     DependsOn:
       - WSO2ISAnalyticsLoadBalancerSecurityGroup
+
 Outputs:
   ISPortalURL:
     Value: !Join
@@ -1695,7 +1695,7 @@ Mappings:
     eu-west-1:
       Ubuntu1804: ami-04149ea124dfedc67
     us-east-1:
-      Ubuntu1804: ami-04d71d525138b3d7e
+      Ubuntu1804: ami-017bb6968f2172b8c
     us-east-2:
       Ubuntu1804: ami-08abe74dc444c4aa3
     us-west-1:
@@ -1705,13 +1705,13 @@ Mappings:
   WSO2ISAMIRegionMap:
     ap-southeast-2:
       CentOS7: ami-0211f0ecd0e693937
-      Ubuntu1804: ami-0fc37bfc486b80d6d
+      Ubuntu1804: ami-011b6cb637fe7e077
     eu-west-1:
       CentOS7: ami-08137d567f9e9413e
       Ubuntu1804: ami-005de30fe41bbe8f3
     us-east-1:
-      CentOS7: ami-0903f4ad60fe4bd68
-      Ubuntu1804: ami-025672766b28e3365
+      CentOS7: ami-09d4e63ccc46083c7
+      Ubuntu1804: ami-02a2048d0e4afcd10
     us-east-2:
       CentOS7: ami-009ac95229cc07041
       Ubuntu1804: ami-0a1af21a7b34de8f7
