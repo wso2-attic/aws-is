@@ -204,7 +204,7 @@ Resources:
           CidrIp: 0.0.0.0/0
   WSO2ISDBInstance:
     Type: 'AWS::RDS::DBInstance'
-    DeletionPolicy: Delete
+    DeletionPolicy: Snapshot
     Properties:
       VPCSecurityGroups:
         - !Ref WSO2ISDBInstanceSecurityGroup
