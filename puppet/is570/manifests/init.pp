@@ -16,13 +16,13 @@
 
 class is570 inherits is570::params {
 
-  if $jdk_version == 'ORACLE_JDK8' {
-    $jdk_type = "jdk-8u144-linux-x64.tar.gz"
-    $jdk_path = "jdk1.8.0_144"
-  }
-  elsif $jdk_version == 'OPEN_JDK8' {
+  if $jdk_version == 'OPEN_JDK8' {
     $jdk_type = "OpenJDK8U-jdk_x64_linux_hotspot_8u192b12.tar.gz"
     $jdk_path = "jdk8u192-b12"
+  }
+  elsif $jdk_version == 'CORRETTO_JDK8' {
+    $jdk_type = "amazon-corretto-8.202.08.2-linux-x64.tar.gz"
+    $jdk_path = "amazon-corretto-8.202.08.2-linux-x64"
   }
 
   # Create wso2 group
