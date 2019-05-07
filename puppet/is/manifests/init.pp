@@ -16,9 +16,14 @@
 
 class is570 inherits is570::params {
 
-  $jdk_type = "OpenJDK8U-jdk_x64_linux_hotspot_8u192b12.tar.gz"
-  $jdk_path = "jdk8u192-b12"
-
+  if $jdk_version == 'ORACLE_JDK8' {
+    $jdk_type = "jdk-8u144-linux-x64.tar.gz"
+    $jdk_path = "jdk1.8.0_144"
+  }
+  elsif $jdk_version == 'OPEN_JDK8' {
+    $jdk_type = "OpenJDK8U-jdk_x64_linux_hotspot_8u192b12.tar.gz"
+    $jdk_path = "jdk8u192-b12"
+  }
 
   # Create wso2 group
   group { $user_group:
@@ -121,11 +126,35 @@ class is570 inherits is570::params {
     source => "puppet:///modules/installers/${db_connector}",
   }
 
+  file { "/usr/lib/wso2/wso2is/5.7.0/${jdk_path}/jre/lib/security/local_policy.jar":
+    owner  => $user,
+    group  => $user_group,
+    mode   => '0754',
+    ensure => present,
+    source => "puppet:///modules/installers/local_policy.jar",
+  }
+
+  file { "/usr/lib/wso2/wso2is/5.7.0/${jdk_path}/jre/lib/security/US_export_policy.jar":
+    owner  => $user,
+    group  => $user_group,
+    mode   => '0754',
+    ensure => present,
+    source => "puppet:///modules/installers/US_export_policy.jar",
+  }
+
   file { "/usr/local/bin/private_ip_extractor.py":
     owner  => $user,
     group  => $user_group,
     mode   => '0754',
     source => "puppet:///modules/installers/private_ip_extractor.py",
   }
+
+    # Copy jacoco agent to the installed directory
+    file { "/usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/lib/jacocoagent.jar":
+      owner  => $user,
+      group  => $user_group,
+      mode   => '0754',
+      source => "puppet:///modules/installers/jacocoagent.jar",
+    }
 
 }
