@@ -15,16 +15,7 @@
 #----------------------------------------------------------------------------
 
 class is570 inherits is570::params {
-
-  if $jdk_version == 'OPEN_JDK8' {
-    $jdk_type = "OpenJDK8U-jdk_x64_linux_hotspot_8u192b12.tar.gz"
-    $jdk_path = "jdk8u192-b12"
-  }
-  elsif $jdk_version == 'CORRETTO_JDK8' {
-    $jdk_type = "amazon-corretto-8.202.08.2-linux-x64.tar.gz"
-    $jdk_path = "amazon-corretto-8.202.08.2-linux-x64"
-  }
-
+  
   # Create wso2 group
   group { $user_group:
     ensure => present,
@@ -97,7 +88,6 @@ class is570 inherits is570::params {
     path    => '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
   }
 
-
   # Copy configuration changes to the installed directory
   $template_list.each |String $template| {
     file { "/usr/lib/wso2/wso2is/5.7.0/wso2is-5.7.0/${template}":
@@ -156,5 +146,4 @@ class is570 inherits is570::params {
       mode   => '0754',
       source => "puppet:///modules/installers/jacocoagent.jar",
     }
-
 }
