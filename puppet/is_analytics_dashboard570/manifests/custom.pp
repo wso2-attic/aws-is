@@ -14,8 +14,8 @@
 #  limitations under the License.
 # ----------------------------------------------------------------------------
 
-# Class: is_analytics_dashboard580::custom
+# Class: is_analytics_dashboard570::custom
 # This class is reserved to run custom user code before starting the server.
-class is_analytics_dashboard580::custom {
+class is_analytics_dashboard570::custom {
   # resources
 }
