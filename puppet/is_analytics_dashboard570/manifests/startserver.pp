@@ -14,9 +14,9 @@
 #  limitations under the License.
 # ----------------------------------------------------------------------------
 
-# Class is_analytics_dashboard580::startserver
+# Class is_analytics_dashboard570::startserver
 # Starts the server as a service in the final stage.
-class is_analytics_dashboard580::startserver inherits is_analytics_dashboard580::params {
+class is_analytics_dashboard570::startserver inherits is_analytics_dashboard570::params {
 
   # Start the service
   # service { $service_name:
