@@ -1,0 +1,19 @@
+[Unit]
+Description=WSO2 Identity Server Analytics - Worker
+After=network.target
+
+[Service]
+ExecStart=<%=@install_path%>/bin/<%=@profile%>.sh start
+ExecStop=<%=@install_path%>/bin/<%=@profile%>.sh stop
+ExecRestart=<%=@install_path%>/bin/<%=@profile%>.sh restart
+PIDFile=<%=@install_path%>/wso2/<%=@profile%>/runtime.pid
+User=<%=@user%>
+Group=<%=@user_group%>
+Type=forking
+Restart=on-failure
+RestartSec=5
+StartLimitInterval=60s
+StartLimitBurst=3
+
+[Install]
+WantedBy=multi-user.target
