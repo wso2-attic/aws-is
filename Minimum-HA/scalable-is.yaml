@@ -421,7 +421,6 @@ Resources:
             - sed -i '/\[main\]/a dns_alt_names=puppetmaster,puppet' /etc/puppet/puppet.conf
             - sed -i '/\[master\]/a autosign=true' /etc/puppet/puppet.conf
             - service puppetmaster restart
-            - cd /home/ubuntu
             - !Join
               - ''
               - - sed -i "s/access-key/
@@ -534,8 +533,8 @@ Resources:
                 - 5.8.0
                 - /g" /usr/local/bin/provision_db_is.sh
             - bash /usr/local/bin/provision_db_is.sh
-            - pushd /etc/puppet/code/environments/production/modules/is580_master
-            - !Sub "./build.sh '${WUMUsername}' '${WUMPassword}'"
+            - cd /home/ubuntu
+            - !Sub "./wso2-init.sh '${WUMUsername}' '${WUMPassword}' wso2is-5.8.0 ${InternalPrepareForTest} is580_master"
             - !Sub "/usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource PuppetMaster --region ${AWS::Region}"
   PuppetMasterSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
@@ -1125,17 +1124,17 @@ Parameters:
 Mappings:
   WSO2PuppetMasterRegionMap:
     ap-southeast-2:
-      Ubuntu1804: ami-04617d0c6fb64347e
+      Ubuntu1804: ami-0676ed41cd7ba375d
     eu-west-1:
-      Ubuntu1804: ami-0ace84a453cb9cc5a
+      Ubuntu1804: ami-04a444c57964461d3
     us-east-1:
-      Ubuntu1804: ami-046d07dd19a13e264
+      Ubuntu1804: ami-03d515174107bd85e
     us-east-2:
-      Ubuntu1804: ami-0f98feef840f3ffbb
+      Ubuntu1804: ami-0fd4f0374764360fa
     us-west-1:
-      Ubuntu1804: ami-0446e0ef1de70a7e8
+      Ubuntu1804: ami-0a34a5da6fa11d744
     us-west-2:
-      Ubuntu1804: ami-0797693f4ae0a065c
+      Ubuntu1804: ami-06c07e06912d7e2c2
   WSO2ISAMIRegionMap:
     ap-southeast-2:
       CentOS7: ami-0211f0ecd0e693937
