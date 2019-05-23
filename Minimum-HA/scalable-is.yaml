@@ -697,10 +697,10 @@ Resources:
         - Key: cluster
           Value: is
           PropagateAtLaunch: 'true'
-    # CreationPolicy:
-    #   ResourceSignal:
-    #     Count: 1
-    #     Timeout: PT20M
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT20M
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MaxBatchSize: '2'
@@ -854,10 +854,10 @@ Resources:
         - Key: cluster
           Value: is
           PropagateAtLaunch: 'true'
-    # CreationPolicy:
-    #   ResourceSignal:
-    #     Count: 1
-    #     Timeout: PT20M
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT20M
     UpdatePolicy:
       AutoScalingRollingUpdate:
         MaxBatchSize: '2'
