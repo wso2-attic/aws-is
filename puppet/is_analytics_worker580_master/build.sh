@@ -92,11 +92,11 @@ cd ${install_path}/bin
 # Run in-place update
 if [[ ${status} -eq 0 ]] || [[ ${status} -eq 1 ]] || [[ ${status} -eq 2 ]]
 then
-  ./update_linux --username ${username} --password ${password} --verbose 2>&1 | tee ${install_path}/bin/output.txt
+  ./update_linux --username ${username} --password ${password} --channel full --verbose 2>&1 | tee ${install_path}/bin/output.txt
   update_status=${PIPESTATUS[0]}
 elif [[ ${status} -eq 3 ]]
 then
-  ./update_linux --username ${username} --password ${password} --verbose --continue 2>&1 | tee ${install_path}/bin/output.txt
+  ./update_linux --username ${username} --password ${password} --channel full --verbose --continue 2>&1 | tee ${install_path}/bin/output.txt
   update_status=${PIPESTATUS[0]}
 
   # Handle user running update script without resolving conflicts
@@ -108,6 +108,14 @@ then
 else
   echo "status file is invalid. Please delete or clear file content."
   exit 1
+fi
+
+# Handle the In-place tool being updated
+if [[ ${update_status} -eq 2 ]]
+then
+    echo "In-place tool has been updated. Running update again."
+    ./update_linux --verbose 2>&1 | tee ${install_path}/bin/output.txt
+    update_status=${PIPESTATUS[0]}
 fi
 
 # Update status
