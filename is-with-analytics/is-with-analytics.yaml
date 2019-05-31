@@ -729,17 +729,18 @@ Resources:
           pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
           wget --no-check-certificate --no-proxy 'http://wso2-cloudformation-templates.s3.amazonaws.com/private_ip_extractor.py' -P /usr/local/bin/
           wget https://s3.amazonaws.com/wso2logarchiever/log_archiver/log_archiver.sh
+          wget --no-check-certificate --no-proxy 'http://wso2-cloudformation-templates.s3.amazonaws.com/logstash-is.conf' -P /usr/lib/logstash-6.5.1/
           mv log_archiver.sh /usr/lib/
           export ProductVersion=5.8.0
-          sed -i "s/Product_Version/5.8.0/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          sed -i "s^secret-key^${AWSAccessKeySecret}^g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          sed -i "s/access-key/${AWSAccessKeyId}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          sed -i "s^ELASTICSEARCH_ENDPOINT^${ElasticSearchEndpoint}^g" /usr/lib/logstash-6.5.1/logstash-IS.conf
+          sed -i "s/Product_Version/5.8.0/g" /usr/lib/logstash-6.5.1/logstash-is.conf
+          sed -i "s^secret-key^${AWSAccessKeySecret}^g" /usr/lib/logstash-6.5.1/logstash-is.conf
+          sed -i "s/access-key/${AWSAccessKeyId}/g" /usr/lib/logstash-6.5.1/logstash-is.conf
+          sed -i "s^ELASTICSEARCH_ENDPOINT^${ElasticSearchEndpoint}^g" /usr/lib/logstash-6.5.1/logstash-is.conf
           export INSTANCEID=$(wget -q -O - http://169.254.169.254/latest/meta-data/instance-id)
-          sed -i "s/INSTANCE_ID/$INSTANCEID/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          sed -i "s/STACK_NAME/${AWS::StackName}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          sed -i "s/REGION_NAME/${ElasticSearchRegion}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          nohup /usr/lib/logstash-6.5.1/bin/logstash -f /usr/lib/logstash-6.5.1/logstash-IS.conf &
+          sed -i "s/INSTANCE_ID/$INSTANCEID/g" /usr/lib/logstash-6.5.1/logstash-is.conf
+          sed -i "s/STACK_NAME/${AWS::StackName}/g" /usr/lib/logstash-6.5.1/logstash-is.conf
+          sed -i "s/REGION_NAME/${ElasticSearchRegion}/g" /usr/lib/logstash-6.5.1/logstash-is.conf
+          nohup /usr/lib/logstash-6.5.1/bin/logstash -f /usr/lib/logstash-6.5.1/logstash-is.conf &
           export PuppetmasterIP=${PuppetMaster.PrivateIp}
           echo "$PuppetmasterIP puppet puppetmaster" >> /etc/hosts
           service puppet restart
@@ -899,17 +900,18 @@ Resources:
           pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
           wget --no-check-certificate --no-proxy 'http://wso2-cloudformation-templates.s3.amazonaws.com/private_ip_extractor.py' -P /usr/local/bin/
           wget https://s3.amazonaws.com/wso2logarchiever/log_archiver/log_archiver.sh
+          wget --no-check-certificate --no-proxy 'http://wso2-cloudformation-templates.s3.amazonaws.com/logstash-is.conf' -P /usr/lib/logstash-6.5.1/
           mv log_archiver.sh /usr/lib/
           export ProductVersion=5.8.0
-          sed -i "s/Product_Version/5.8.0/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          sed -i "s^secret-key^${AWSAccessKeySecret}^g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          sed -i "s/access-key/${AWSAccessKeyId}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          sed -i "s^ELASTICSEARCH_ENDPOINT^${ElasticSearchEndpoint}^g" /usr/lib/logstash-6.5.1/logstash-IS.conf
+          sed -i "s/Product_Version/5.8.0/g" /usr/lib/logstash-6.5.1/logstash-is.conf
+          sed -i "s^secret-key^${AWSAccessKeySecret}^g" /usr/lib/logstash-6.5.1/logstash-is.conf
+          sed -i "s/access-key/${AWSAccessKeyId}/g" /usr/lib/logstash-6.5.1/logstash-is.conf
+          sed -i "s^ELASTICSEARCH_ENDPOINT^${ElasticSearchEndpoint}^g" /usr/lib/logstash-6.5.1/logstash-is.conf
           export INSTANCEID=$(wget -q -O - http://169.254.169.254/latest/meta-data/instance-id)
-          sed -i "s/INSTANCE_ID/$INSTANCEID/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          sed -i "s/STACK_NAME/${AWS::StackName}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          sed -i "s/REGION_NAME/${ElasticSearchRegion}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
-          nohup /usr/lib/logstash-6.5.1/bin/logstash -f /usr/lib/logstash-6.5.1/logstash-IS.conf &
+          sed -i "s/INSTANCE_ID/$INSTANCEID/g" /usr/lib/logstash-6.5.1/logstash-is.conf
+          sed -i "s/STACK_NAME/${AWS::StackName}/g" /usr/lib/logstash-6.5.1/logstash-is.conf
+          sed -i "s/REGION_NAME/${ElasticSearchRegion}/g" /usr/lib/logstash-6.5.1/logstash-is.conf
+          nohup /usr/lib/logstash-6.5.1/bin/logstash -f /usr/lib/logstash-6.5.1/logstash-is.conf &
           export PuppetmasterIP=${PuppetMaster.PrivateIp}
           echo "$PuppetmasterIP puppet puppetmaster" >> /etc/hosts
           service puppet restart
