@@ -594,6 +594,7 @@ Resources:
           #!/bin/bash
           export PATH=~/.local/bin:$PATH
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
+              export DEBIAN_FRONTEND=noninteractive
               apt-get update
               apt install -y puppet nfs-common
               apt install -y python-pip
@@ -752,6 +753,7 @@ Resources:
           #!/bin/bash
           export PATH=~/.local/bin:$PATH
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
+              export DEBIAN_FRONTEND=noninteractive
               apt-get update
               apt install -y puppet nfs-common
               apt install -y python-pip
