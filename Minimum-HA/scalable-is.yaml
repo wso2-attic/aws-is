@@ -707,18 +707,18 @@ Resources:
         - Key: cluster
           Value: is
           PropagateAtLaunch: 'true'
-          #    CreationPolicy:
-          #      ResourceSignal:
-          #        Count: 1
-          #        Timeout: PT20M
-          #    UpdatePolicy:
-          #      AutoScalingRollingUpdate:
-          #        MaxBatchSize: '2'
-          #        MinInstancesInService: '1'
-          #        PauseTime: PT10M
-          #        SuspendProcesses:
-          #          - AlarmNotification
-          #        WaitOnResourceSignals: true
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT20M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MaxBatchSize: '2'
+        MinInstancesInService: '1'
+        PauseTime: PT10M
+        SuspendProcesses:
+          - AlarmNotification
+        WaitOnResourceSignals: true
     DependsOn:
       - WSO2ISLoadBalancer
   WSO2ISNode2LaunchConfiguration:
@@ -866,18 +866,18 @@ Resources:
         - Key: cluster
           Value: is
           PropagateAtLaunch: 'true'
-          #    CreationPolicy:
-          #      ResourceSignal:
-          #        Count: 1
-          #        Timeout: PT20M
-          #    UpdatePolicy:
-          #      AutoScalingRollingUpdate:
-          #        MaxBatchSize: '2'
-          #        MinInstancesInService: '1'
-          #        PauseTime: PT10M
-          #        SuspendProcesses:
-          #          - AlarmNotification
-          #        WaitOnResourceSignals: true
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT20M
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MaxBatchSize: '2'
+        MinInstancesInService: '1'
+        PauseTime: PT10M
+        SuspendProcesses:
+          - AlarmNotification
+        WaitOnResourceSignals: true
     DependsOn:
       - WSO2ISLoadBalancer
   WSO2ISLoadBalancerSecurityGroup:
