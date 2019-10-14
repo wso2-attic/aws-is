@@ -446,12 +446,12 @@ Resources:
               - ''
               - - sed -i "s/access-key/
                 - !Ref AWSAccessKeyId
-                - /g" /etc/puppet/code/environments/production/modules/is580_master/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/REGION_NAME/
                 - !Ref "AWS::Region"
-                - /g" /etc/puppet/code/environments/production/modules/is580_master/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_ELB_DNS_NAME/
@@ -460,94 +460,94 @@ Resources:
                   - DNSName
                 - >-
                   /g"
-                  /etc/puppet/code/environments/production/modules/is580_master/manifests/params.pp
+                  /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DB_USERNAME/
                 - !Ref DBUsername
-                - /g" /etc/puppet/code/environments/production/modules/is580_master/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DB_PASSWORD/
                 - !Ref DBPassword
-                - /g" /etc/puppet/code/environments/production/modules/is580_master/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DBMS/
                 - !Select [0, !Split ["_", !FindInMap [ DBEngineMap, !Ref DB, DBEngine]]]
-                - /g" /etc/puppet/code/environments/production/modules/is580_master/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_RDS_URL/
                 - !GetAtt
                   - WSO2ISDBInstance
                   - Endpoint.Address
-                - /g" /etc/puppet/code/environments/production/modules/is580_master/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DB_USERNAME/
                 - !Ref DBUsername
-                - /g" /etc/puppet/code/environments/production/modules/is_analytics_dashboard580_master/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is_analytics_dashboard/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DB_PASSWORD/
                 - !Ref DBPassword
-                - /g" /etc/puppet/code/environments/production/modules/is_analytics_dashboard580_master/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is_analytics_dashboard/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DBMS/
                 - !Select [0, !Split ["_", !FindInMap [ DBEngineMap, !Ref DB, DBEngine]]]
-                - /g" /etc/puppet/code/environments/production/modules/is_analytics_dashboard580_master/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is_analytics_dashboard/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_RDS_URL/
                 - !GetAtt
                   - WSO2ISDBInstance
                   - Endpoint.Address
-                - /g" /etc/puppet/code/environments/production/modules/is_analytics_dashboard580_master/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is_analytics_dashboard/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DB_USERNAME/
                 - !Ref DBUsername
-                - /g" /etc/puppet/code/environments/production/modules/is_analytics_worker580_master/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is_analytics_worker/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DB_PASSWORD/
                 - !Ref DBPassword
-                - /g" /etc/puppet/code/environments/production/modules/is_analytics_worker580_master/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is_analytics_worker/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DBMS/
                 - !Select [0, !Split ["_", !FindInMap [ DBEngineMap, !Ref DB, DBEngine]]]
-                - /g" /etc/puppet/code/environments/production/modules/is_analytics_worker580_master/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is_analytics_worker/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_RDS_URL/
                 - !GetAtt
                   - WSO2ISDBInstance
                   - Endpoint.Address
-                - /g" /etc/puppet/code/environments/production/modules/is_analytics_worker580_master/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is_analytics_worker/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s^secretkey^
                 - !Ref AWSAccessKeySecret
-                - ^g" /etc/puppet/code/environments/production/modules/is580_master/manifests/params.pp
+                - ^g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
             - export DB_NAME=WSO2_IS_DB
             - !Join
               - ''
               - - sed -i "s/JDK_TYPE/
                 - !Ref JDK
-                - /g" /etc/puppet/code/environments/production/modules/is580/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/JDK_TYPE/
                 - !Ref JDK
-                - /g" /etc/puppet/code/environments/production/modules/is_analytics_worker580/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is_analytics_worker/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/JDK_TYPE/
                 - !Ref JDK
-                - /g" /etc/puppet/code/environments/production/modules/is_analytics_dashboard580/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is_analytics_dashboard/manifests/params.pp
             - !Join
               - ''
               - - export DB_HOSTNAME=
@@ -605,7 +605,7 @@ Resources:
             - !Join
               - ''
               - - sed -i "s/CF_PRODUCT_VERSION/
-                - 5.8.0
+                - 5.9.0
                 - /g" /usr/local/bin/provision_db_is.sh
             - !Join
               - ''
@@ -649,9 +649,8 @@ Resources:
             - bash /usr/local/bin/provision_db_is.sh
             - bash /usr/local/bin/provision_db_is-analytics.sh
             - cd /home/ubuntu
-            - !Sub "./wso2-init.sh '${WUMUsername}' '${WUMPassword}' wso2is-5.8.0 ${InternalPrepareForTest} is580_master"
-            - !Sub "./wso2-init.sh '${WUMUsername}' '${WUMPassword}' wso2is-5.8.0-analytics ${InternalPrepareForTest} is_analytics_worker580_master"
-            - !Sub "./wso2-init.sh '${WUMUsername}' '${WUMPassword}' wso2is-5.8.0-analytics ${InternalPrepareForTest} is_analytics_dashboard580_master"
+            - !Sub "./wso2-init.sh '${WUMUsername}' '${WUMPassword}' wso2is-5.9.0 ${InternalPrepareForTest}"
+            - !Sub "./wso2-init.sh '${WUMUsername}' '${WUMPassword}' wso2is-5.8.0-analytics ${InternalPrepareForTest}"
             - !Sub "/usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource PuppetMaster --region ${AWS::Region}"
   PuppetMasterSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
@@ -732,8 +731,8 @@ Resources:
           wget https://s3.amazonaws.com/wso2logarchiever/log_archiver/log_archiver.sh
           wget --no-check-certificate --no-proxy 'http://wso2-cloudformation-templates.s3.amazonaws.com/logstash-is.conf' -P /usr/lib/logstash-6.5.1/
           mv log_archiver.sh /usr/lib/
-          export ProductVersion=5.8.0
-          sed -i "s/Product_Version/5.8.0/g" /usr/lib/logstash-6.5.1/logstash-is.conf
+          export ProductVersion=5.9.0
+          sed -i "s/Product_Version/5.9.0/g" /usr/lib/logstash-6.5.1/logstash-is.conf
           sed -i "s^secret-key^${AWSAccessKeySecret}^g" /usr/lib/logstash-6.5.1/logstash-is.conf
           sed -i "s/access-key/${AWSAccessKeyId}/g" /usr/lib/logstash-6.5.1/logstash-is.conf
           sed -i "s^ELASTICSEARCH_ENDPOINT^${ElasticSearchEndpoint}^g" /usr/lib/logstash-6.5.1/logstash-is.conf
@@ -748,7 +747,7 @@ Resources:
           mkdir -p /mnt/efs
           mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs
           sleep 100
-          export FACTER_profile=is580
+          export FACTER_profile=is590
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
               puppet agent -vt >> /var/log/puppetlog.log
           fi
@@ -758,24 +757,24 @@ Resources:
           sleep 10
           if [ ! -d "/mnt/efs/server/userstores" ]; then
               mkdir -p /mnt/efs/server/userstores
-              cp -r /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/deployment/server/userstores /mnt/efs/userstores
+              cp -r /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/userstores /mnt/efs/userstores
           fi
-          rm -rf  /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/deployment/server/userstores
-          ln -s /mnt/efs/server/userstores /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/deployment/server/userstores
+          rm -rf  /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/userstores
+          ln -s /mnt/efs/server/userstores /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/userstores
           if [ ! -d "/mnt/efs/tenants" ]; then
               mkdir -p /mnt/efs/tenants
-              cp -r /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/tenants /mnt/efs
+              cp -r /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/tenants /mnt/efs
           fi
-          rm -rf /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/tenants
-          ln -s /mnt/efs/tenants /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/tenants
+          rm -rf /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/tenants
+          ln -s /mnt/efs/tenants /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/tenants
           echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
           sleep 30
           export ANALYTICS_IP=$(python /usr/local/bin/private_ip_extractor.py ${AWS::Region} ${AWSAccessKeyId} ${AWSAccessKeySecret} WSO2ISAnalyticsWorker)
-          sed -i "s/CF_ANALYTICS_IP/$ANALYTICS_IP/g" /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-SessionData.xml
-          sed -i "s/CF_ANALYTICS_IP/$ANALYTICS_IP/g" /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-AuthenticationData.xml
-          sed -i "s/CF_ANALYTICS_IP/$ANALYTICS_IP/g" /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-RoleData.xml
-          sed -i "s/CF_ANALYTICS_IP/$ANALYTICS_IP/g" /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-UserData.xml
-          /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/bin/wso2server.sh start
+          sed -i "s/localhost/$ANALYTICS_IP/g" /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-SessionData.xml
+          sed -i "s/localhost/$ANALYTICS_IP/g" /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-AuthenticationData.xml
+          sed -i "s/localhost/$ANALYTICS_IP/g" /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-RoleData.xml
+          sed -i "s/localhost/$ANALYTICS_IP/g" /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-UserData.xml
+          /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/bin/wso2server.sh start
           ${CustomUserData}
           sleep 30
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
@@ -904,8 +903,8 @@ Resources:
           wget https://s3.amazonaws.com/wso2logarchiever/log_archiver/log_archiver.sh
           wget --no-check-certificate --no-proxy 'http://wso2-cloudformation-templates.s3.amazonaws.com/logstash-is.conf' -P /usr/lib/logstash-6.5.1/
           mv log_archiver.sh /usr/lib/
-          export ProductVersion=5.8.0
-          sed -i "s/Product_Version/5.8.0/g" /usr/lib/logstash-6.5.1/logstash-is.conf
+          export ProductVersion=5.9.0
+          sed -i "s/Product_Version/5.9.0/g" /usr/lib/logstash-6.5.1/logstash-is.conf
           sed -i "s^secret-key^${AWSAccessKeySecret}^g" /usr/lib/logstash-6.5.1/logstash-is.conf
           sed -i "s/access-key/${AWSAccessKeyId}/g" /usr/lib/logstash-6.5.1/logstash-is.conf
           sed -i "s^ELASTICSEARCH_ENDPOINT^${ElasticSearchEndpoint}^g" /usr/lib/logstash-6.5.1/logstash-is.conf
@@ -920,7 +919,7 @@ Resources:
           mkdir -p /mnt/efs
           mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs
           sleep 300
-          export FACTER_profile=is580
+          export FACTER_profile=is590
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
               puppet agent -vt >> /var/log/puppetlog.log
           fi
@@ -930,24 +929,24 @@ Resources:
           sleep 10
           if [ ! -d "/mnt/efs/server/userstores" ]; then
               mkdir -p /mnt/efs/server/userstores
-              cp -r /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/deployment/server/userstores /mnt/efs/userstores
+              cp -r /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/userstores /mnt/efs/userstores
           fi
-          rm -rf  /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/deployment/server/userstores
-          ln -s /mnt/efs/server/userstores /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/deployment/server/userstores
+          rm -rf  /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/userstores
+          ln -s /mnt/efs/server/userstores /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/userstores
           if [ ! -d "/mnt/efs/tenants" ]; then
               mkdir -p /mnt/efs/tenants
-              cp -r /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/tenants /mnt/efs
+              cp -r /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/tenants /mnt/efs
           fi
-          rm -rf /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/tenants
-          ln -s /mnt/efs/tenants /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/tenants
+          rm -rf /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/tenants
+          ln -s /mnt/efs/tenants /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/tenants
           echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
           sleep 30
           export ANALYTICS_IP=$(python /usr/local/bin/private_ip_extractor.py ${AWS::Region} ${AWSAccessKeyId} ${AWSAccessKeySecret} WSO2ISAnalyticsWorker)
-          sed -i "s/CF_ANALYTICS_IP/$ANALYTICS_IP/g" /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-SessionData.xml
-          sed -i "s/CF_ANALYTICS_IP/$ANALYTICS_IP/g" /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-AuthenticationData.xml
-          sed -i "s/CF_ANALYTICS_IP/$ANALYTICS_IP/g" /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-RoleData.xml
-          sed -i "s/CF_ANALYTICS_IP/$ANALYTICS_IP/g" /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-UserData.xml
-          /usr/local/wso2/wso2is/5.8.0/wso2is-5.8.0/bin/wso2server.sh start
+          sed -i "s/localhost/$ANALYTICS_IP/g" /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-SessionData.xml
+          sed -i "s/localhost/$ANALYTICS_IP/g" /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-AuthenticationData.xml
+          sed -i "s/localhost/$ANALYTICS_IP/g" /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-RoleData.xml
+          sed -i "s/localhost/$ANALYTICS_IP/g" /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/eventpublishers/IsAnalytics-Publisher-wso2event-UserData.xml
+          /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/bin/wso2server.sh start
           ${CustomUserData}
           sleep 30
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
@@ -1232,7 +1231,7 @@ Resources:
           echo "$PuppetmasterIP puppet puppetmaster" >> /etc/hosts
           sleep 200
           wget --no-check-certificate --no-proxy 'http://wso2-cloudformation-templates.s3.amazonaws.com/private_ip_extractor.py' -P /usr/local/bin/
-          export FACTER_profile=is_analytics_worker580
+          export FACTER_profile=is_analytics_worker
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
               puppet agent -vt >> /var/log/puppetlog.log
           fi
@@ -1240,7 +1239,7 @@ Resources:
               /opt/puppetlabs/bin/puppet agent -vt >> /var/log/puppetlog.log
           fi
           sleep 30
-          /usr/local/wso2/wso2is-analytics/worker/5.8.0/wso2is-analytics-5.8.0/bin/worker.sh start
+          /usr/lib/wso2/wso2is-analytics/5.8.0/wso2is-analytics-5.8.0/bin/worker.sh start
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
               /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WSO2ISAnalyticsWorkerAutoScalingGroup --region ${AWS::Region}
           fi
@@ -1338,7 +1337,7 @@ Resources:
           export PuppetmasterIP=${PuppetMaster.PrivateIp}
           echo "$PuppetmasterIP puppet puppetmaster" >> /etc/hosts
           sleep 200
-          export FACTER_profile=is_analytics_dashboard580
+          export FACTER_profile=is_analytics_dashboard
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
               puppet agent -vt >> /var/log/puppetlog.log
           fi
@@ -1346,7 +1345,7 @@ Resources:
               /opt/puppetlabs/bin/puppet agent -vt >> /var/log/puppetlog.log
           fi
           sleep 30
-          /usr/local/wso2/wso2is-analytics/dashboard/5.8.0/wso2is-analytics-5.8.0/bin/dashboard.sh start
+          /usr/lib/wso2/wso2is-analytics/5.8.0/wso2is-analytics-5.8.0/bin/dashboard.sh start
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
               /usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WSO2ISAnalyticsDashboardAutoScalingGroup --region ${AWS::Region}
           fi
@@ -1670,7 +1669,7 @@ Parameters:
       - db.m4.large
   DB:
     Type: String
-    Default: MySQL-5.7
+    Default: MySQL-5.6
     AllowedValues:
       - MySQL-5.6
       - MySQL-5.7
@@ -1699,17 +1698,17 @@ Parameters:
 Mappings:
   WSO2PuppetMasterRegionMap:
     ap-southeast-2:
-      Ubuntu1804: ami-0cd6c2155e5313646
+      Ubuntu1804: ami-05d849a334a4cd5c4
     eu-west-1:
-      Ubuntu1804: ami-0e71c555e6ac1c684
+      Ubuntu1804: ami-054f9e9c1e737c0d2
     us-east-1:
-      Ubuntu1804: ami-0d52b3d6632f75844
+      Ubuntu1804: ami-08769943864b89ffe
     us-east-2:
-      Ubuntu1804: ami-033ee04ed21a6aaa9
+      Ubuntu1804: ami-04357abca93242865
     us-west-1:
-      Ubuntu1804: ami-007fa39fcd1587cd7
+      Ubuntu1804: ami-046accedfb292606a
     us-west-2:
-      Ubuntu1804: ami-086840efee4e718e9
+      Ubuntu1804: ami-0bea268f574ed046b
   WSO2ISAMIRegionMap:
     ap-southeast-2:
       CentOS7: ami-0211f0ecd0e693937
