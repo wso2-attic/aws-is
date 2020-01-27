@@ -1496,7 +1496,7 @@ Resources:
         - !Ref WSO2ISPublicSubnet1
         - !Ref WSO2ISPublicSubnet2
       SecurityGroups:
-        - !Ref WSO2ISAnalyticsSecurityGroup
+        - !Ref WSO2ISAnalyticsLoadBalancerSecurityGroup
   WSO2ISDashboardALBTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
