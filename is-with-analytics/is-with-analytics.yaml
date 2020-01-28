@@ -1505,11 +1505,11 @@ Resources:
       HealthCheckTimeoutSeconds: 10
       HealthyThresholdCount: 2
       HealthCheckPath: /portal
-      HealthCheckPort: 9443
+      HealthCheckPort: 9643
       Matcher:
         HttpCode: 200
-      Name: is-dashboard-9443
-      Port: 9443
+      Name: is-dashboard-9643
+      Port: 9643
       Protocol: HTTPS
       TargetGroupAttributes:
       - Key: deregistration_delay.timeout_seconds
@@ -1537,7 +1537,7 @@ Resources:
             - /
             - !Ref CertificateName
       LoadBalancerArn: !Ref WSO2ISAnalyticsLoadBalancer
-      Port: 9443
+      Port: 9643
       Protocol: HTTPS
       SslPolicy: ELBSecurityPolicy-TLS-1-1-2017-01
     DependsOn:
