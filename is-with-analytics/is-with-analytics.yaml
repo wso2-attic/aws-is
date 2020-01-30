@@ -1504,7 +1504,7 @@ Resources:
       HealthCheckProtocol: HTTPS
       HealthCheckTimeoutSeconds: 10
       HealthyThresholdCount: 2
-      HealthCheckPath: /portal
+      HealthCheckPath: /portal/
       HealthCheckPort: 9643
       Matcher:
         HttpCode: 200
