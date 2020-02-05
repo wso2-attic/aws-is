@@ -1496,7 +1496,7 @@ Resources:
         - !Ref WSO2ISPublicSubnet1
         - !Ref WSO2ISPublicSubnet2
       SecurityGroups:
-        - !Ref WSO2ISAnalyticsLoadBalancerSecurityGroup
+        - !Ref WSO2ISAnalyticsSecurityGroup
   WSO2ISDashboardALBTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -1505,11 +1505,11 @@ Resources:
       HealthCheckTimeoutSeconds: 10
       HealthyThresholdCount: 2
       HealthCheckPath: /portal/
-      HealthCheckPort: 9643
+      HealthCheckPort: 9443
       Matcher:
         HttpCode: 200
-      Name: is-dashboard-9643
-      Port: 9643
+      Name: is-dashboard-9443
+      Port: 9443
       Protocol: HTTPS
       TargetGroupAttributes:
       - Key: deregistration_delay.timeout_seconds
@@ -1537,7 +1537,7 @@ Resources:
             - /
             - !Ref CertificateName
       LoadBalancerArn: !Ref WSO2ISAnalyticsLoadBalancer
-      Port: 9643
+      Port: 9443
       Protocol: HTTPS
       SslPolicy: ELBSecurityPolicy-TLS-1-1-2017-01
     DependsOn:
