@@ -1264,7 +1264,7 @@ Resources:
           Value: WSO2ISAnalyticsWorker
           PropagateAtLaunch: 'true'
         - Key: cluster
-          Value: ei-analytics
+          Value: is-analytics
           PropagateAtLaunch: 'true'
     CreationPolicy:
       ResourceSignal:
@@ -1372,7 +1372,7 @@ Resources:
           Value: WSO2ISAnalyticsDashboard
           PropagateAtLaunch: 'true'
         - Key: cluster
-          Value: ei-analytics
+          Value: is-analytics
           PropagateAtLaunch: 'true'
     CreationPolicy:
       ResourceSignal:
