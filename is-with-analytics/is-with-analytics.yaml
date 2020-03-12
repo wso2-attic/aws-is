@@ -28,8 +28,6 @@ Metadata:
           - CertificateName
           - DBUsername
           - DBPassword
-          - WUMUsername
-          - WUMPassword
       - Label:
           default: Advanced Configuration
         Parameters:
@@ -68,10 +66,6 @@ Metadata:
         default: Enable Test Mode
       CustomUserData:
         default: Custom Userdata
-      WUMUsername:
-        default: WSO2 Username
-      WUMPassword:
-        default: WSO2 Password
       WSO2InstanceType:
         default: Instance Type
       DB:
@@ -347,7 +341,7 @@ Resources:
     CreationPolicy:
       ResourceSignal:
         Count: 1
-        Timeout: PT20M
+        Timeout: PT30M
     Properties:
       DisableApiTermination: 'false'
       InstanceInitiatedShutdownBehavior: stop
@@ -649,8 +643,8 @@ Resources:
             - bash /usr/local/bin/provision_db_is.sh
             - bash /usr/local/bin/provision_db_is-analytics.sh
             - cd /home/ubuntu
-            - !Sub "./wso2-init.sh '${WUMUsername}' '${WUMPassword}' wso2is-5.9.0 ${InternalPrepareForTest}"
-            - !Sub "./wso2-init.sh '${WUMUsername}' '${WUMPassword}' wso2is-5.8.0-analytics ${InternalPrepareForTest}"
+            - !Sub "./wso2-init.sh wso2is-5.9.0"
+            - !Sub "./wso2-init.sh wso2is-analytics-5.8.0"
             - !Sub "/usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource PuppetMaster --region ${AWS::Region}"
   PuppetMasterSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
@@ -1634,13 +1628,6 @@ Parameters:
   ElasticSearchEndpoint:
     Type: String
     Default: ""
-  WUMPassword:
-    Type: String
-    Default: ""
-    NoEcho: true
-  WUMUsername:
-    Type: String
-    Default: ""
   DBUsername:
     Type: String
     MinLength: 4
@@ -1698,17 +1685,17 @@ Parameters:
 Mappings:
   WSO2PuppetMasterRegionMap:
     ap-southeast-2:
-      Ubuntu1804: ami-05de5bd2847563123
+      Ubuntu1804: ami-0cc69674b734c12d5
     eu-west-1:
-      Ubuntu1804: ami-011415b1d23451c5e
+      Ubuntu1804: ami-055c443ab89edafd6
     us-east-1:
-      Ubuntu1804: ami-0e63f0e852249f770
+      Ubuntu1804: ami-00ac6af8bbed2e0c4
     us-east-2:
-      Ubuntu1804: ami-023198ee18aaa40d4
+      Ubuntu1804: ami-082a5252624a8a5bd
     us-west-1:
-      Ubuntu1804: ami-0040ce15e56b67773
+      Ubuntu1804: ami-08b55abf68b02d474
     us-west-2:
-      Ubuntu1804: ami-0e0d5965bdc35bca0
+      Ubuntu1804: ami-035624cc667af4700
   WSO2ISAMIRegionMap:
     ap-southeast-2:
       CentOS7: ami-0211f0ecd0e693937
