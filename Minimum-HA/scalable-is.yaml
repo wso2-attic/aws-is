@@ -424,18 +424,18 @@ Resources:
             - sed -i '/\[master\]/a autosign=true' /etc/puppet/puppet.conf
             - service puppetmaster restart
             - cd /home/ubuntu
-            - !Sub "./wso2-init.sh wso2is-5.9.0"
+            - !Sub "./wso2-init.sh wso2is-5.10.0"
             - !Sub "/usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource PuppetMaster --region ${AWS::Region}"
             - !Join
               - ''
               - - sed -i "s/access-key/
                 - !Ref AWSAccessKeyId
-                - /g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is5100/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/REGION_NAME/
                 - !Ref "AWS::Region"
-                - /g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is5100/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_ELB_DNS_NAME/
@@ -444,40 +444,40 @@ Resources:
                   - DNSName
                 - >-
                   /g"
-                  /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
+                  /etc/puppet/code/environments/production/modules/is5100/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DB_USERNAME/
                 - !Ref DBUsername
-                - /g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is5100/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DB_PASSWORD/
                 - !Ref DBPassword
-                - /g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is5100/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_DBMS/
                 - !Select [0, !Split ["_", !FindInMap [ DBEngineMap, !Ref DB, DBEngine]]]
-                - /g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is5100/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s/CF_RDS_URL/
                 - !GetAtt
                   - WSO2ISDBInstance
                   - Endpoint.Address
-                - /g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is5100/manifests/params.pp
             - !Join
               - ''
               - - sed -i "s^secretkey^
                 - !Ref AWSAccessKeySecret
-                - ^g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
+                - ^g" /etc/puppet/code/environments/production/modules/is5100/manifests/params.pp
             - export DB_NAME=WSO2_IS_DB
             - !Join
               - ''
               - - sed -i "s/JDK_TYPE/
                 - !Ref JDK
-                - /g" /etc/puppet/code/environments/production/modules/is590/manifests/params.pp
+                - /g" /etc/puppet/code/environments/production/modules/is5100/manifests/params.pp
             - !Join
               - ''
               - - export DB_HOSTNAME=
@@ -535,7 +535,7 @@ Resources:
             - !Join
               - ''
               - - sed -i "s/CF_PRODUCT_VERSION/
-                - 5.9.0
+                - 5.10.0
                 - /g" /usr/local/bin/provision_db_is.sh
             - bash /usr/local/bin/provision_db_is.sh
   PuppetMasterSecurityGroup:
@@ -613,8 +613,8 @@ Resources:
           pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
           wget https://s3.amazonaws.com/wso2logarchiever/log_archiver/log_archiver.sh
           mv log_archiver.sh /usr/lib/
-          export ProductVersion=5.9.0
-          sed -i "s/Product_Version/5.9.0/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
+          export ProductVersion=5.10.0
+          sed -i "s/Product_Version/5.10.0/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           sed -i "s^secret-key^${AWSAccessKeySecret}^g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           sed -i "s/access-key/${AWSAccessKeyId}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           sed -i "s^ELASTICSEARCH_ENDPOINT^${ElasticSearchEndpoint}^g" /usr/lib/logstash-6.5.1/logstash-IS.conf
@@ -629,7 +629,7 @@ Resources:
           mkdir -p /mnt/efs
           mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs
           sleep 100
-          export FACTER_profile=is590
+          export FACTER_profile=is5100
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
               puppet agent -vt >> /var/log/puppetlog.log
           fi
@@ -639,18 +639,18 @@ Resources:
           sleep 10
           if [ ! -d "/mnt/efs/server/userstores" ]; then
               mkdir -p /mnt/efs/server/userstores
-              cp -r /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/userstores /mnt/efs/userstores
+              cp -r /usr/lib/wso2/wso2is/5.10.0/wso2is-5.10.0/repository/deployment/server/userstores /mnt/efs/userstores
           fi
-          rm -rf  /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/userstores
-          ln -s /mnt/efs/server/userstores /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/userstores
+          rm -rf  /usr/lib/wso2/wso2is/5.10.0/wso2is-5.10.0/repository/deployment/server/userstores
+          ln -s /mnt/efs/server/userstores /usr/lib/wso2/wso2is/5.10.0/wso2is-5.10.0/repository/deployment/server/userstores
           if [ ! -d "/mnt/efs/tenants" ]; then
               mkdir -p /mnt/efs/tenants
-              cp -r /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/tenants /mnt/efs
+              cp -r /usr/lib/wso2/wso2is/5.10.0/wso2is-5.10.0/repository/tenants /mnt/efs
           fi
-          rm -rf /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/tenants
-          ln -s /mnt/efs/tenants /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/tenants
+          rm -rf /usr/lib/wso2/wso2is/5.10.0/wso2is-5.10.0/repository/tenants
+          ln -s /mnt/efs/tenants /usr/lib/wso2/wso2is/5.10.0/wso2is-5.10.0/repository/tenants
           echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
-          /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/bin/wso2server.sh start
+          /usr/lib/wso2/wso2is/5.10.0/wso2is-5.10.0/bin/wso2server.sh start
           ${CustomUserData}
           sleep 30
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
@@ -772,8 +772,8 @@ Resources:
           pip install https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
           wget https://s3.amazonaws.com/wso2logarchiever/log_archiver/log_archiver.sh
           mv log_archiver.sh /usr/lib/
-          export ProductVersion=5.9.0
-          sed -i "s/Product_Version/5.9.0/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
+          export ProductVersion=5.10.0
+          sed -i "s/Product_Version/5.10.0/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           sed -i "s^secret-key^${AWSAccessKeySecret}^g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           sed -i "s/access-key/${AWSAccessKeyId}/g" /usr/lib/logstash-6.5.1/logstash-IS.conf
           sed -i "s^ELASTICSEARCH_ENDPOINT^${ElasticSearchEndpoint}^g" /usr/lib/logstash-6.5.1/logstash-IS.conf
@@ -788,7 +788,7 @@ Resources:
           mkdir -p /mnt/efs
           mount -t nfs4 -o nfsvers=4.1 ${WSO2ISEFSFileSystem}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs
           sleep 300
-          export FACTER_profile=is590
+          export FACTER_profile=is5100
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
               puppet agent -vt >> /var/log/puppetlog.log
           fi
@@ -798,18 +798,18 @@ Resources:
           sleep 10
           if [ ! -d "/mnt/efs/server/userstores" ]; then
               mkdir -p /mnt/efs/server/userstores
-              cp -r /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/userstores /mnt/efs/userstores
+              cp -r /usr/lib/wso2/wso2is/5.10.0/wso2is-5.10.0/repository/deployment/server/userstores /mnt/efs/userstores
           fi
-          rm -rf  /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/userstores
-          ln -s /mnt/efs/server/userstores /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/deployment/server/userstores
+          rm -rf  /usr/lib/wso2/wso2is/5.10.0/wso2is-5.10.0/repository/deployment/server/userstores
+          ln -s /mnt/efs/server/userstores /usr/lib/wso2/wso2is/5.10.0/wso2is-5.10.0/repository/deployment/server/userstores
           if [ ! -d "/mnt/efs/tenants" ]; then
               mkdir -p /mnt/efs/tenants
-              cp -r /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/tenants /mnt/efs
+              cp -r /usr/lib/wso2/wso2is/5.10.0/wso2is-5.10.0/repository/tenants /mnt/efs
           fi
-          rm -rf /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/tenants
-          ln -s /mnt/efs/tenants /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/repository/tenants
+          rm -rf /usr/lib/wso2/wso2is/5.10.0/wso2is-5.10.0/repository/tenants
+          ln -s /mnt/efs/tenants /usr/lib/wso2/wso2is/5.10.0/wso2is-5.10.0/repository/tenants
           echo "${WSO2ISEFSFileSystem}:/ /mnt/efs efs defaults,_netdev 0 0" >> /etc/fstab
-          /usr/lib/wso2/wso2is/5.9.0/wso2is-5.9.0/bin/wso2server.sh start
+          /usr/lib/wso2/wso2is/5.10.0/wso2is-5.10.0/bin/wso2server.sh start
           ${CustomUserData}
           sleep 30
           if [[ ${OperatingSystem} == "Ubuntu1804" ]]; then
@@ -1058,12 +1058,7 @@ Parameters:
       - "OPEN_JDK8"
       - "ORACLE_JDK8"
       - "CORRETTO_JDK8"
-  InternalPrepareForTest:
-    Type: String
-    Default: "False"
-    AllowedValues:
-      - "False"
-      - "True"
+      - "ADOPT_OPEN_JDK11"
   ElasticSearchEndpoint:
     Type: String
     Default: ""
@@ -1094,9 +1089,8 @@ Parameters:
       - db.m4.large
   DB:
     Type: String
-    Default: MySQL-5.6
+    Default: MySQL-5.7
     AllowedValues:
-      - MySQL-5.6
       - MySQL-5.7
       - Postgres-9.6
       - Postgres-10.5
@@ -1123,17 +1117,17 @@ Parameters:
 Mappings:
   WSO2PuppetMasterRegionMap:
     ap-southeast-2:
-      Ubuntu1804: ami-04fc310cc18d58430
+      Ubuntu1804: ami-0e042aab03c03c30f
     eu-west-1:
-      Ubuntu1804: ami-00858b3432143b33a
+      Ubuntu1804: ami-0286c0ecc6be0fd9f
     us-east-1:
-      Ubuntu1804: ami-04c83ed0f2bc0dec0
+      Ubuntu1804: ami-0bb8fd435b5210001
     us-east-2:
-      Ubuntu1804: ami-0ab13e07d8a053439
+      Ubuntu1804: ami-025af69414fa5380f
     us-west-1:
-      Ubuntu1804: ami-0662ca84c320f7576
+      Ubuntu1804: ami-04990df076736ac21
     us-west-2:
-      Ubuntu1804: ami-03b028ffbaacc6ea0
+      Ubuntu1804: ami-03ab44e2f405ede94
   WSO2ISAMIRegionMap:
     ap-southeast-2:
       CentOS7: ami-0211f0ecd0e693937
