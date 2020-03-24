@@ -643,7 +643,7 @@ Resources:
             - bash /usr/local/bin/provision_db_is.sh
             - bash /usr/local/bin/provision_db_is-analytics.sh
             - cd /home/ubuntu
-            - wget https://wso2-cloudformation-templates.s3.amazonaws.com/wso2-init.sh
+            - wget -O wso2-init.sh https://wso2-cloudformation-templates.s3.amazonaws.com/wso2-init.sh
             - chmod +x wso2-init.sh
             - !Sub "./wso2-init.sh wso2is-5.9.0"
             - !Sub "./wso2-init.sh wso2is-analytics-5.8.0"
