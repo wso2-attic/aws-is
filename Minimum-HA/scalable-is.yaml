@@ -424,6 +424,8 @@ Resources:
             - sed -i '/\[master\]/a autosign=true' /etc/puppet/puppet.conf
             - service puppetmaster restart
             - cd /home/ubuntu
+            - wget https://wso2-cloudformation-templates.s3.amazonaws.com/wso2-init.sh
+            - chmod +x wso2-init.sh
             - !Sub "./wso2-init.sh wso2is-5.9.0"
             - !Sub "/usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource PuppetMaster --region ${AWS::Region}"
             - !Join
