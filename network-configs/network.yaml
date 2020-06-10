@@ -176,16 +176,16 @@ Resources:
 Outputs:
   PrivateSubnet1:
     Value: !Ref WSO2PrivateSubnet1
-    Description: Private Subnet 1
+    Description: Private Subnet for PuppetMaster, Prodcut Instance and the DB
   PrivateSubnet2:
     Value: !Ref WSO2PrivateSubnet2
-    Description: Private Subnet 2
+    Description: Private Subnet for Prodcut Instance and the DB
   PrublicSubnet1:
     Value: !Ref WSO2PublicSubnet1
-    Description: Public Subnet 1
+    Description: Public Subnet for NAT Gateway, Bastion Instance and Load Balancer
   PublicSubnet2:
     Value: !Ref WSO2PublicSubnet2
-    Description: Public Subnet 2
+    Description: Public Subnet for Load Balancer
   VPC:
     Value: !Ref WSO2VPC
     Description: VPC
