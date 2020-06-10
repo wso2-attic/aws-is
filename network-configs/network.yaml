@@ -176,7 +176,7 @@ Resources:
 Outputs:
   PrivateSubnet1:
     Value: !Ref WSO2PrivateSubnet1
-    Description: Private Subnet for PuppetMaster, Prodcut Instance and the DB
+    Description: Private Subnet for PuppetMaster, Prodcut Instance, EFS and the DB
   PrivateSubnet2:
     Value: !Ref WSO2PrivateSubnet2
     Description: Private Subnet for Prodcut Instance and the DB
