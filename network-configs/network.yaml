@@ -61,7 +61,7 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: name
-          Value: !Ref EnvironmentName
+          Value: !Sub ${EnvironmentName} WSO2VPC
 
   WSO2PublicSubnet1:
     Type: AWS::EC2::Subnet
@@ -88,7 +88,7 @@ Resources:
     Properties:
       Tags:
         - Key: Name
-          Value: !Ref EnvironmentName
+          Value: !Sub ${EnvironmentName} WSO2 Internet Gateway
 
   WSO2PublicRouteTable:
     Type: AWS::EC2::RouteTable
