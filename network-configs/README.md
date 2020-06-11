@@ -5,3 +5,10 @@ This is the Phase one of deploying WSO2 Identity Server HA deployment. Use the [
 ## Design Overview
 
 ![Design Overview](../images/network.png)
+
+### Estimated Cost
+
+```
+$8.50 per month
+```
+We recommend you to keep the Bastion Instance in the `Stop` status after the deployment. The Bastion instance can be started whenever required to log into the Product Instances.
