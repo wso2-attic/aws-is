@@ -51,7 +51,7 @@ Metadata:
         default: WSO2 Private Subnet 2 - ID
 Resources:
   WSO2ISDBInstance:
-    Type: 'AWS::RDS::DBInstance'
+    Type: AWS::RDS::DBInstance
     DeletionPolicy: Delete
     Properties:
       VPCSecurityGroups:
@@ -70,14 +70,14 @@ Resources:
       StorageType: gp2
       DBSubnetGroupName: !Ref WSO2ISDBSubnetGroup
   WSO2ISDBSubnetGroup:
-    Type: 'AWS::RDS::DBSubnetGroup'
+    Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupDescription: DB Subnet Group
       SubnetIds:
         - !Ref WSO2PrivateSubnet1
         - !Ref WSO2PrivateSubnet2
   WSO2ISDBInstanceSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
+    Type: AWS::EC2::SecurityGroup
     Properties:
       VpcId: !Ref WSO2VPC
       GroupDescription: DB Security Group
@@ -147,13 +147,13 @@ Parameters:
       - SQLServer-SE-13.00
       - SQLServer-SE-14.00
   WSO2VPC:
-    Type: "AWS::EC2::VPC::Id"
+    Type: AWS::EC2::VPC::Id
     Description: VPC ID of your existing Virtual Private Cloud (VPC)
   WSO2PrivateSubnet1:
-    Type: "AWS::EC2::Subnet::Id"
+    Type: AWS::EC2::Subnet::Id
     Description: Private Subnet for PuppetMaster, Prodcut Instance, EFS and the DB
   WSO2PrivateSubnet2:
-    Type: "AWS::EC2::Subnet::Id"
+    Type: AWS::EC2::Subnet::Id
     Description: Private Subnet for Prodcut Instance and the DB
 Mappings:
   DBEngineMap:
