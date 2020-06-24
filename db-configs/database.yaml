@@ -108,6 +108,12 @@ Outputs:
   WSO2ISDBInstance:
     Value: !Ref WSO2ISDBInstance
     Description: Identity Server DB Instance
+  WSO2ISDBInstanceEndpointAddress:
+    Value: !GetAtt WSO2ISDBInstance.Endpoint.Address
+    Description: Identity Server DB Instance Endpoint Address
+  WSO2ISDBInstanceEndpointPort:
+    Value: !GetAtt WSO2ISDBInstance.Endpoint.Port
+    Description: Identity Server DB Instance Endpoint Port
 Parameters:
   DBUsername:
     Type: String
