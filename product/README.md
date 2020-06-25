@@ -14,6 +14,13 @@ The WSO2 IS CloudFormation templates use Puppet to manage the server configurati
 First the Puppetmaster AMI would deploy and afterwards the product specific AMI's would deploy and request the necessary configurations from the Puppetmaster AMI to deploy the WSO2 Identity Server.
 
 
+### Estimated Cost
+
+```
+$8.50 per month
+```
+
+
 ## Scalable IS
 
 ![pattern1](images/is-pattern1.png)
