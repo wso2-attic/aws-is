@@ -43,7 +43,7 @@ Metadata:
           - WSO2ISPrivateSubnet1
           - WSO2ISPrivateSubnet2
           - WSO2ISPublicSubnet1
-          - WSO2ISPublicSubnetWSO2ISPublicSubnet2
+          - WSO2ISPublicSubnet2
     ParameterLabels:
       AWSAccessKeyId:
         default: AWS Access Key ID
