@@ -5,6 +5,8 @@ This is the final Phase of deploying WSO2 Identity Server HA deployment. Use the
 
 ## Design Overview
 
+![Design Overview](../images/product-deployment.png)
+
 The WSO2 IS CloudFormation templates use Puppet to manage the server configurations and use the following AMI's to provision the deployment.
 
 1. Puppetmaster AMI - Contains the Identity Server GA distribution, WSO2 Update Manager and Puppet modules containing the configurations for IS deployment patterns.
@@ -17,7 +19,7 @@ First the Puppetmaster AMI would deploy and afterwards the product specific AMI'
 ### Estimated Cost
 
 ```
-$8.50 per month
+$101.92 per month
 ```
 
 
