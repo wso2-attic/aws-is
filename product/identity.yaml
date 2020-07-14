@@ -352,7 +352,7 @@ Resources:
               - - sed -i "s/CF_PRODUCT_VERSION/
                 - 5.10.0
                 - /g" /usr/local/bin/provision_db_is.sh
-            - bash /usr/local/bin/provision_db_is.sprovision_db_is.sh
+            - bash /usr/local/bin/provision_db_is.sh
   PuppetMasterSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
