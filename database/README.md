@@ -1,6 +1,6 @@
 # WSO2 Identity Server High Available Deployment - Database
 
-This is the Phase two of deploying WSO2 Identity Server HA deployment. Use the [database.yaml](database.yaml) to create the required Database. The followings are the tested database versions at the moment.
+This is Phase two of deploying WSO2 Identity Server HA deployment. Use the [database.yaml](database.yaml) to create the required Database. The followings are the tested database versions at the moment.
 
 ```
   - MySQL-5.7
@@ -23,6 +23,7 @@ If you already have a preconfigured database, please proceed to [Phase 3](../Min
 ```
 $ 72.78 per month
 ```
+The above cost is calculated to the default parameters given in the [database.yaml](database.yaml). If different inputs are chosen at the runtime, the cost may differ from the above.
 
 ## Database customizations
 
