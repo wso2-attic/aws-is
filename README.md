@@ -1,23 +1,13 @@
 # AWS Resources for WSO2 Identity Server
 
-This repository contains CloudFormation templates to deploy WSO2 Identity Server with different patterns in Amazon Web Services(AWS).
+ The following sections guide you through setting up the deployment pattern, which is an HA Clustered Deployment of two WSO2 Identity Server nodes on AWS using CloudFormation scripts.
 
-Available patterns are [scalable-is](https://github.com/wso2/aws-is/tree/master/scalable-is).
+  ![pattern1](images/is-pattern1.png)
 
-The WSO2 IS CloudFormation templates use Puppet to manage the server configurations and use the following AMI's to provision the deployment.
+## Steps to deploy
 
-1. Puppetmaster AMI - Contains the Identity Server GA distribution, WSO2 Update Manager and Puppet modules containing the configurations for IS deployment patterns.
+The deployment is of three phases. All three phases can either run individually or can be combined via a [nested CloudFormation script](Minimum-HA/nested-identity.yaml). Follow the provided guides to deploy each phase.
 
-2. IS AMI - Contains the scripts that is required to create the Puppet catalog.
-
-First the Puppetmaster AMI would deploy and afterwards the product specific AMI's would deploy and request the necessary configurations from the Puppetmaster AMI to deploy the WSO2 Identity Server.
-
-## Scalable IS
-
-![pattern1](images/is-pattern1.png)
-
-## Identity Server Samples
-
-- Setting up sample application for SAML SSO authentication
-    - travelocity.com
-    - PassiveSTSSampleApp
+  - Phase 1: [Network setup](network/README.md)
+  - Phase 2: [Database setup](database/README.md)
+  - Phase 3: [Product deployment](product/README.md)
