@@ -38,3 +38,54 @@ The above cost is calculated to the default parameters given in the [identity.ya
 ## Scalable IS
 
 ![pattern1](../images/is-pattern1.png)
+
+
+## Customizations
+
+WSO2ISEFSFileSystem contains the bare minimum configurations to run an EFS. In a production system the following values should be configured based on the requirements.
+
+### File system encryption
+
+Replace the EFS configurations in the CloudFormation if you need the File System to be encrypted.
+
+#### [Encrypted:](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-efs-filesystem.html)
+
+> A Boolean value that, if true, creates an encrypted file system.
+
+#### [KmsKeyId:](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-efs-filesystem.html)
+
+> The ID of the AWS KMS customer master key (CMK) to be used to protect the encrypted file system. This parameter is only required if you want to use a nondefault CMK. If this parameter is not specified, the default CMK for Amazon EFS is used. If KmsKeyId is specified, the Encrypted parameter must be set to true.
+
+```yaml
+WSO2ISEFSFileSystem:
+  Type: 'AWS::EFS::FileSystem'
+  Properties:
+    PerformanceMode: generalPurpose
+    Encrypted: true
+    KmsKeyId: !Ref KmsKeyId
+```
+
+### File system throughput
+
+Replace the EFS configurations in the CloudFormation if you need to change the throughput configurations.
+
+#### [ThroughputMode:](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-efs-filesystem.html)
+
+> The throughput mode for the file system to be created. There are two throughput modes to choose from for your file system: bursting and provisioned. If you set ThroughputMode to provisioned, you must also set a value for ProvisionedThroughPutInMibps. You can decrease your file system's throughput in Provisioned Throughput mode or change between the throughput modes as long as it’s been more than 24 hours since the last decrease or throughput mode change
+
+#### [ProvisionedThroughPutInMibps:](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-efs-filesystem.html)
+
+> The throughput, measured in MiB/s, that you want to provision for a file system that you're creating. Valid values are 1-1024. Required if ThroughputMode is set to provisioned. The upper limit for throughput is 1024 MiB/s.
+
+```yaml
+WSO2ISEFSFileSystem:
+  Type: 'AWS::EFS::FileSystem'
+  Properties:
+    PerformanceMode: generalPurpose
+    ThroughputMode: provisioned
+    ProvisionedThroughPutInMibps: 2.0
+```
+
+## Things to note
+
+- Update the CIDR blocks of the [identity.yaml](identity.yaml) as required to limit the traffic to/in your deployment as required.

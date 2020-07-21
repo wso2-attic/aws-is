@@ -12,7 +12,7 @@ This is Phase two of deploying WSO2 Identity Server HA deployment. Use the [data
   - SQLServer-SE-14.00
 ```
 
-If you already have a preconfigured database, please proceed to [Phase 3](../Minimun-HA/README.md).
+If you already have a preconfigured database, please proceed to [Phase 3](../prodcut/README.md).
 
 ## Design Overview
 
