@@ -23,32 +23,30 @@ Metadata:
         Parameters:
           - AWSAccessKeyId
           - AWSAccessKeySecret
-          - KeyPairName
-          - WSO2InstanceType
-          - CertificateName
-          - OperatingSystem
-          - WSO2ISDBInstanceEndpointAddress
-          - WSO2ISDBInstanceEndpointPort
-          - BastionInstanceType
-          - BastionOperatingSystem
           - DBUsername
           - DBPassword
+          - KeyPairName
+          - CertificateName
       - Label:
           default: Advanced Configuration
         Parameters:
           - CustomUserData
+          - ElasticSearchEndpoint
+          - ElasticSearchRegion
           - DB
           - DBAllocationStorage
           - DBInstanceType
-          - ElasticSearchEndpoint
-          - ElasticSearchRegion
           - EnvironmentName
           - JDK
+          - OperatingSystem
+          - WSO2InstanceType
           - PrivateSubnet1CIDR
           - PrivateSubnet2CIDR
           - PublicSubnet1CIDR
           - PublicSubnet2CIDR
           - VpcCIDR
+          - BastionInstanceType
+          - BastionOperatingSystem
     ParameterLabels:
       AWSAccessKeyId:
         default: AWS Access Key ID
@@ -142,6 +140,7 @@ Parameters:
       - db.m4.xlarge
 
   DB:
+    Description: Choose preffered Database from the list
     Type: String
     Default: MySQL-5.7
     AllowedValues:
@@ -154,6 +153,7 @@ Parameters:
       - SQLServer-SE-14.00
 
   ElasticSearchEndpoint:
+    Description: If you have ElasticSearch endpoint to publish logs, else keep this empty
     Type: String
     Default: ""
 
@@ -174,6 +174,7 @@ Parameters:
     Default: Dev
 
   JDK:
+    Description: Choose preffered JDK from the list
     Type: String
     Default: "OPEN_JDK8"
     AllowedValues:
