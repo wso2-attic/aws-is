@@ -861,6 +861,7 @@ Parameters:
     Type: String
     Default: "echo"
   JDK:
+    Description: Choose preffered JDK from the list
     Type: String
     Default: "OPEN_JDK8"
     AllowedValues:
@@ -869,6 +870,7 @@ Parameters:
       - "CORRETTO_JDK8"
       - "ADOPT_OPEN_JDK11"
   ElasticSearchEndpoint:
+    Description: If you have ElasticSearch endpoint to publish logs, else keep this empty
     Type: String
     Default: ""
   WSO2ISDBInstanceEndpointAddress:
@@ -884,6 +886,7 @@ Parameters:
     MinLength: 8
     NoEcho: true
   DB:
+    Description: Choose preffered Database from the list
     Type: String
     Default: MySQL-5.7
     AllowedValues:
