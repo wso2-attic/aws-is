@@ -65,8 +65,6 @@ Metadata:
         default: DB Password
       JDK:
         default: JDK
-      InternalPrepareForTest:
-        default: Enable Test Mode
       CustomUserData:
         default: Customer User Data
       WSO2InstanceType:
