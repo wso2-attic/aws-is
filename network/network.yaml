@@ -236,7 +236,7 @@ Outputs:
     Value: !Ref WSO2PrivateSubnet2
     Description: Private Subnet for Prodcut Instance and the DB
 
-  PrublicSubnet1:
+  PublicSubnet1:
     Value: !Ref WSO2PublicSubnet1
     Description: Public Subnet for NAT Gateway, Bastion Instance and Load Balancer
 
