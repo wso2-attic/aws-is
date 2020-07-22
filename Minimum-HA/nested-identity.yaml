@@ -16,7 +16,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: WSO2 Identity Server deployment with Clustering
 
 Metadata:
-  'AWS::CloudFormation::Interface':
+  AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
           default: Basic Configuration
@@ -37,9 +37,9 @@ Metadata:
           - DBAllocationStorage
           - DBInstanceType
           - EnvironmentName
+          - WSO2InstanceType
           - JDK
           - OperatingSystem
-          - WSO2InstanceType
           - PrivateSubnet1CIDR
           - PrivateSubnet2CIDR
           - PublicSubnet1CIDR
@@ -53,23 +53,23 @@ Metadata:
       AWSAccessKeySecret:
         default: AWS Access Secret Key
       BastionInstanceType:
-        default: Bastion Instance Type
+        default: Instance Type for Bastion Instance
       BastionOperatingSystem:
         default: Operating System for Bastion Instance
       CertificateName:
         default: SSL Certificate Name
       CustomUserData:
-        default: Customer User Data
+        default: Custom User Data
       DB:
         default: Database
       DBUsername:
-        default: DB Username
+        default: Database Username
       DBPassword:
-        default: DB Password
+        default: Database Password
       DBAllocationStorage:
-        default: Allocation Storage
+        default: Database Allocation Storage
       DBInstanceType:
-        default: DB Instance Type
+        default: Database Instance Type
       ElasticSearchEndpoint:
         default: ElasticSearch Endpoint
       ElasticSearchRegion:
@@ -92,6 +92,8 @@ Metadata:
         default: Public Subnet 2 CIDR
       VpcCIDR:
         default: VPC CIDR
+      WSO2InstanceType:
+        default: Instance type for Identity Server deployment
 
 Parameters:
   AWSAccessKeyId:
@@ -239,6 +241,7 @@ Parameters:
       - CentOS7
 
   WSO2InstanceType:
+    Description: Choose Instance type for Identity Server deployment from the list
     Type: String
     Default: t2.medium
     AllowedValues:
