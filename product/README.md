@@ -20,7 +20,7 @@ The WSO2 IS CloudFormation templates use Puppet to manage the server configurati
      - The scripts needed to add the latest updates to the WSO2 products are retrieved.
      - The latest updates for WSO2 servers are added to the residing GA WSO2 servers in the AMI.
      - Relevant configurations(IP addresses, DB URLs, etc.) are done to the puppet modules.
-     - DB scripts are executed against the DB created in [Phase 2](../db-configs/README.md).
+     - DB scripts are executed against the DB created in [Phase 2](../database/README.md).
 
 2. Identity Server(Puppet agent)
      - The latest OS updates and the required tools such as puppet-agent, AWS CLI, Logstash, JDK are installed in the puppet agent.
