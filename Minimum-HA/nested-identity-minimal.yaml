@@ -1,0 +1,226 @@
+# Copyright (c) 2020, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: WSO2 Identity Server deployment with Clustering
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Basic Configuration
+        Parameters:
+          - AWSAccessKeyId
+          - AWSAccessKeySecret
+          - DBUsername
+          - DBPassword
+          - KeyPairName
+          - CertificateName
+      - Label:
+          default: Advanced Configuration
+        Parameters:
+          - DB
+          - JDK
+          - OperatingSystem
+    ParameterLabels:
+      AWSAccessKeyId:
+        default: AWS Access Key ID
+      AWSAccessKeySecret:
+        default: AWS Access Secret Key
+      CertificateName:
+        default: SSL Certificate Name
+      CustomUserData:
+        default: Custom User Data
+      DB:
+        default: Database
+      DBUsername:
+        default: Database Username
+      DBPassword:
+        default: Database Password
+      JDK:
+        default: JDK
+      KeyPairName:
+        default: Key Pair Name
+      OperatingSystem:
+        default: Operating System
+      WSO2InstanceType:
+        default: Instance type for Identity Server deployment
+
+Parameters:
+  AWSAccessKeyId:
+    Type: String
+
+  AWSAccessKeySecret:
+    Type: String
+
+  CertificateName:
+    Description: A valid SSL certificate used for HTTPS
+    Type: String
+    MinLength: 1
+
+  DBUsername:
+    Type: String
+    MinLength: 4
+    AllowedPattern: '[A-Za-z0-9\-]+'
+
+  DBPassword:
+    Type: String
+    MinLength: 8
+    NoEcho: true
+
+  DB:
+    Description: Choose preffered Database from the list
+    Type: String
+    Default: MySQL-5.7
+    AllowedValues:
+      - MySQL-5.7
+      - Postgres-9.6
+      - Postgres-10.5
+      - Oracle-SE1-11.2
+      - Oracle-SE2-12.1
+      - SQLServer-SE-13.00
+      - SQLServer-SE-14.00
+
+  JDK:
+    Description: Choose preffered JDK from the list
+    Type: String
+    Default: "OPEN_JDK8"
+    AllowedValues:
+      - "OPEN_JDK8"
+      - "ORACLE_JDK8"
+      - "CORRETTO_JDK8"
+      - "ADOPT_OPEN_JDK11"
+
+  KeyPairName:
+    Description: The private key used to log in to instances through SSH
+    Type: AWS::EC2::KeyPair::KeyName
+
+  OperatingSystem:
+    Description: Operating System for Identity Server deployment
+    Type: String
+    Default: Ubuntu1804
+    AllowedValues:
+      - Ubuntu1804
+      - CentOS7
+
+Resources:
+  WSO2Network:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://aws-nested-cloudformation.s3.amazonaws.com/wso2is-5.10.0/network.yaml
+      TimeoutInMinutes: '30'
+      Parameters:
+        KeyPairName: !Ref KeyPairName
+      Tags:
+        - Key: Name
+          Value: WSO2Network
+
+  Database:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://aws-nested-cloudformation.s3.amazonaws.com/wso2is-5.10.0/database.yaml
+      TimeoutInMinutes: '30'
+      Parameters:
+        DBUsername: !Ref DBUsername
+        DBPassword: !Ref DBPassword
+        DB: !Ref DB
+        DBAllocationStorage: 20
+        WSO2VPC: !GetAtt WSO2Network.Outputs.VPC
+        WSO2PrivateSubnet1: !GetAtt WSO2Network.Outputs.PrivateSubnet1
+        WSO2PrivateSubnet2: !GetAtt WSO2Network.Outputs.PrivateSubnet2
+      Tags:
+        - Key: Name
+          Value: WSO2Database
+
+  WSO2IdentityServerSetup:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://aws-nested-cloudformation.s3.amazonaws.com/wso2is-5.10.0/identity.yaml
+      TimeoutInMinutes: '30'
+      Parameters:
+        AWSAccessKeyId: !Ref AWSAccessKeyId
+        AWSAccessKeySecret: !Ref AWSAccessKeySecret
+        CertificateName: !Ref CertificateName
+        DBUsername: !Ref DBUsername
+        DBPassword: !Ref DBPassword
+        DB: !Ref DB
+        JDK: !Ref JDK
+        KeyPairName: !Ref KeyPairName
+        OperatingSystem: !Ref OperatingSystem
+        WSO2ISDBInstanceEndpointAddress: !GetAtt Database.Outputs.WSO2ISDBInstanceEndpointAddress
+        WSO2ISDBInstanceEndpointPort: !GetAtt Database.Outputs.WSO2ISDBInstanceEndpointPort
+        WSO2ISVPC: !GetAtt WSO2Network.Outputs.VPC
+        WSO2ISPrivateSubnet1: !GetAtt WSO2Network.Outputs.PrivateSubnet1
+        WSO2ISPrivateSubnet2: !GetAtt WSO2Network.Outputs.PrivateSubnet2
+        WSO2ISPublicSubnet1: !GetAtt WSO2Network.Outputs.PublicSubnet1
+        WSO2ISPublicSubnet2: !GetAtt WSO2Network.Outputs.PublicSubnet2
+      Tags:
+        - Key: Name
+          Value: WSO2IdentityServerSetup
+
+Outputs:
+  MgtConsoleUrl:
+    Value: !GetAtt WSO2IdentityServerSetup.Outputs.MgtConsoleUrl
+    Description: Identity Server Management Console URL
+  CarbonServerUrl:
+    Value: !GetAtt WSO2IdentityServerSetup.Outputs.CarbonServerUrl
+    Description: Carbon Server URL
+  ISHttpUrl:
+    Value: !GetAtt WSO2IdentityServerSetup.Outputs.ISHttpUrl
+    Description: IS HTTP Gateway endpoint
+  ISHttpsUrl:
+    Value: !GetAtt WSO2IdentityServerSetup.Outputs.ISHttpsUrl
+    Description: IS HTTPS Gateway endpoint
+
+  WSO2ISDBInstanceEndpointAddress:
+    Value: !GetAtt Database.Outputs.WSO2ISDBInstanceEndpointAddress
+    Description: Identity Server DB Instance Endpoint Address
+    Export:
+      Name: WSO2ISDBInstanceEndpointAddress
+
+  WSO2ISDBInstanceEndpointPort:
+    Value: !GetAtt Database.Outputs.WSO2ISDBInstanceEndpointPort
+    Description: Identity Server DB Instance Endpoint Port
+    Export:
+      Name: WSO2ISDBInstanceEndpointPort
+
+  PrivateSubnet1:
+    Value: !GetAtt WSO2Network.Outputs.PrivateSubnet1
+    Description: Private Subnet for PuppetMaster, Prodcut Instance, EFS and the DB
+    Export:
+      Name: PrivateSubnet1
+
+  PrivateSubnet2:
+    Value: !GetAtt WSO2Network.Outputs.PrivateSubnet2
+    Description: Private Subnet for Prodcut Instance and the DB
+    Export:
+      Name: PrivateSubnet2
+
+  PublicSubnet1:
+    Value: !GetAtt WSO2Network.Outputs.PublicSubnet1
+    Description: Public Subnet for NAT Gateway, Bastion Instance and Load Balancer
+    Export:
+      Name: PublicSubnet1
+
+  PublicSubnet2:
+    Value: !GetAtt WSO2Network.Outputs.PublicSubnet2
+    Description: Public Subnet for Load Balancer
+    Export:
+      Name: PublicSubnet2
+
+  VPC:
+    Value: !GetAtt WSO2Network.Outputs.VPC
+    Description: VPC
+    Export:
+      Name: WSO2VPC
