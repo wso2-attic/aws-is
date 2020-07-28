@@ -29,6 +29,7 @@ Metadata:
           - DB
           - DBAllocationStorage
           - DBInstanceType
+          - EnvironmentName
           - WSO2VPC
           - WSO2PrivateSubnet1
           - WSO2PrivateSubnet2
@@ -43,6 +44,8 @@ Metadata:
         default: Allocation Storage
       DBInstanceType:
         default: DB Instance Type
+      EnvironmentName:
+        default: Environment Name
       WSO2VPC:
         default: VPC ID
       WSO2PrivateSubnet1:
@@ -69,6 +72,9 @@ Resources:
       MultiAZ: 'false'
       StorageType: gp2
       DBSubnetGroupName: !Ref WSO2ISDBSubnetGroup
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WSO2ISDBInstance
   WSO2ISDBSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
@@ -76,6 +82,9 @@ Resources:
       SubnetIds:
         - !Ref WSO2PrivateSubnet1
         - !Ref WSO2PrivateSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WSO2ISDBSubnetGroup
   WSO2ISDBInstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -98,6 +107,9 @@ Resources:
           FromPort: '1433'
           ToPort: '1433'
           CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WSO2ISDBInstanceSecurityGroup
 Outputs:
   WSO2ISDBInstanceSecurityGroup:
     Value: !Ref WSO2ISDBInstanceSecurityGroup
@@ -152,6 +164,10 @@ Parameters:
       - Oracle-SE2-12.1
       - SQLServer-SE-13.00
       - SQLServer-SE-14.00
+  EnvironmentName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    Default: Dev
   WSO2VPC:
     Type: AWS::EC2::VPC::Id
     Description: VPC ID of your existing Virtual Private Cloud (VPC)
