@@ -39,6 +39,7 @@ Metadata:
           - JDK
           - ElasticSearchEndpoint
           - ElasticSearchRegion
+          - EnvironmentName
           - WSO2ISVPC
           - WSO2ISPrivateSubnet1
           - WSO2ISPrivateSubnet2
@@ -63,6 +64,8 @@ Metadata:
         default: DB Username
       DBPassword:
         default: DB Password
+      EnvironmentName:
+        default: Environment Name
       JDK:
         default: JDK
       CustomUserData:
@@ -97,10 +100,16 @@ Resources:
         FromPort: '2049'
         ToPort: '2049'
         CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WSO2ISEFSSecurityGroup
   WSO2ISEFSFileSystem:
     Type: 'AWS::EFS::FileSystem'
     Properties:
       PerformanceMode: generalPurpose
+      FileSystemTags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WSO2ISEFSSecurityGroup
   WSO2ISPrivateSubnet1EFSMountTarget:
     Type: 'AWS::EFS::MountTarget'
     Properties:
@@ -167,6 +176,9 @@ Resources:
           FromPort: '8140'
           ToPort: '8140'
           CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WSO2ISSecurityGroup
   PuppetMaster:
     Type: 'AWS::EC2::Instance'
     CreationPolicy:
@@ -191,7 +203,7 @@ Resources:
       Monitoring: 'false'
       Tags:
         - Key: Name
-          Value: PuppetMasterInstance
+          Value: !Sub ${EnvironmentName} PuppetMasterInstance
       NetworkInterfaces:
         - DeleteOnTermination: 'true'
           Description: Primary network interface
@@ -369,6 +381,9 @@ Resources:
           FromPort: 9200
           ToPort: 9200
           CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} PuppetMasterSecurityGroup
   WSO2ISNode1LaunchConfiguration:
     Type: 'AWS::AutoScaling::LaunchConfiguration'
     Properties:
@@ -507,7 +522,7 @@ Resources:
         - !Ref WSO2ISPrivateSubnet1
       Tags:
         - Key: Name
-          Value: WSO2ISInstance1
+          Value: !Sub ${EnvironmentName} WSO2ISInstance1
           PropagateAtLaunch: 'true'
         - Key: cluster
           Value: is
@@ -664,7 +679,7 @@ Resources:
         - !Ref WSO2ISPrivateSubnet2
       Tags:
         - Key: Name
-          Value: WSO2ISInstance2
+          Value: !Sub ${EnvironmentName} WSO2ISInstance2
           PropagateAtLaunch: 'true'
         - Key: cluster
           Value: is
@@ -738,6 +753,9 @@ Resources:
           FromPort: '5701'
           ToPort: '5701'
           CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WSO2ISLoadBalancerSecurityGroup
   WSO2ISLoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
@@ -748,6 +766,9 @@ Resources:
         - !Ref WSO2ISPublicSubnet2
       SecurityGroups:
         - !Ref WSO2ISLoadBalancerSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName} WSO2ISLoadBalancer
   WSO2ISALBTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -772,7 +793,7 @@ Resources:
         Ref: WSO2ISVPC
       Tags:
       - Key: Name
-        Value: is
+        Value: !Sub ${EnvironmentName} WSO2ISALBTargetGroup
   WSO2ISALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -861,7 +882,7 @@ Parameters:
     Type: String
     Default: "echo"
   JDK:
-    Description: Choose preffered JDK from the list
+    Description: Choose preferred JDK from the list
     Type: String
     Default: "OPEN_JDK8"
     AllowedValues:
@@ -873,6 +894,10 @@ Parameters:
     Description: If you have ElasticSearch endpoint to publish logs, else keep this empty
     Type: String
     Default: ""
+  EnvironmentName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    Default: Dev
   WSO2ISDBInstanceEndpointAddress:
     Type: String
   WSO2ISDBInstanceEndpointPort:
@@ -886,7 +911,7 @@ Parameters:
     MinLength: 8
     NoEcho: true
   DB:
-    Description: Choose preffered Database from the list
+    Description: Choose preferred Database from the list
     Type: String
     Default: MySQL-5.7
     AllowedValues:
