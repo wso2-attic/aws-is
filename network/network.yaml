@@ -60,7 +60,7 @@ Resources:
       EnableDnsSupport: true
       EnableDnsHostnames: true
       Tags:
-        - Key: name
+        - Key: Name
           Value: !Sub ${EnvironmentName} WSO2VPC
 
   WSO2PublicSubnet1:
