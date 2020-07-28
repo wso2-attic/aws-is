@@ -274,7 +274,7 @@ Resources:
         OperatingSystem: !Ref BastionOperatingSystem
       Tags:
         - Key: Name
-          Value: WSO2Network
+          Value: !Sub ${EnvironmentName} WSO2Network
 
   Database:
     Type: AWS::CloudFormation::Stack
@@ -287,12 +287,13 @@ Resources:
         DB: !Ref DB
         DBAllocationStorage: !Ref DBAllocationStorage
         DBInstanceType: !Ref DBInstanceType
+        EnvironmentName: !Ref EnvironmentName
         WSO2VPC: !GetAtt WSO2Network.Outputs.VPC
         WSO2PrivateSubnet1: !GetAtt WSO2Network.Outputs.PrivateSubnet1
         WSO2PrivateSubnet2: !GetAtt WSO2Network.Outputs.PrivateSubnet2
       Tags:
         - Key: Name
-          Value: WSO2Database
+          Value: !Sub ${EnvironmentName} WSO2Database
 
   WSO2IdentityServerSetup:
     Type: AWS::CloudFormation::Stack
@@ -309,6 +310,7 @@ Resources:
         DB: !Ref DB
         ElasticSearchEndpoint: !Ref ElasticSearchEndpoint
         ElasticSearchRegion: !Ref ElasticSearchRegion
+        EnvironmentName: !Ref EnvironmentName
         JDK: !Ref JDK
         KeyPairName: !Ref KeyPairName
         OperatingSystem: !Ref OperatingSystem
@@ -322,7 +324,7 @@ Resources:
         WSO2ISPublicSubnet2: !GetAtt WSO2Network.Outputs.PublicSubnet2
       Tags:
         - Key: Name
-          Value: WSO2IdentityServerSetup
+          Value: !Sub ${EnvironmentName} WSO2IdentityServerSetup
 
 Outputs:
   MgtConsoleUrl:
