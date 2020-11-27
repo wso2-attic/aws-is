@@ -260,7 +260,7 @@ Resources:
   WSO2Network:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://aws-nested-cloudformation.s3.amazonaws.com/wso2is-5.10.0/network.yaml
+      TemplateURL: https://aws-nested-cloudformation-iam.s3.amazonaws.com/wso2is-5.11.0/network.yaml
       TimeoutInMinutes: '60'
       Parameters:
         EnvironmentName: !Ref EnvironmentName
@@ -279,7 +279,7 @@ Resources:
   Database:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://aws-nested-cloudformation.s3.amazonaws.com/wso2is-5.10.0/database.yaml
+      TemplateURL: https://aws-nested-cloudformation-iam.s3.amazonaws.com/wso2is-5.11.0/database.yaml
       TimeoutInMinutes: '60'
       Parameters:
         DBUsername: !Ref DBUsername
@@ -298,7 +298,7 @@ Resources:
   WSO2IdentityServerSetup:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://aws-nested-cloudformation.s3.amazonaws.com/wso2is-5.10.0/identity.yaml
+      TemplateURL: https://aws-nested-cloudformation-iam.s3.amazonaws.com/wso2is-5.11.0/identity.yaml
       TimeoutInMinutes: '60'
       Parameters:
         AWSAccessKeyId: !Ref AWSAccessKeyId
