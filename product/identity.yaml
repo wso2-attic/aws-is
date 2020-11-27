@@ -362,6 +362,13 @@ Resources:
               - - sed -i "s/CF_PRODUCT_VERSION/
                 - 5.11.0
                 - /g" /usr/local/bin/provision_db_is.sh
+            - wget -O /home/ubuntu/is/is5110/is_mssql.sql 'https://is-5110-dbscripts.s3.amazonaws.com/is_mssql.sql'
+            - wget -O /home/ubuntu/is/is5110/is_mysql.sql 'https://is-5110-dbscripts.s3.amazonaws.com/is_mysql.sql'
+            - wget -O /home/ubuntu/is/is5110/is_oracle_bps.sql 'https://is-5110-dbscripts.s3.amazonaws.com/is_oracle_bps.sql'
+            - wget -O /home/ubuntu/is/is5110/is_oracle_common.sql 'https://is-5110-dbscripts.s3.amazonaws.com/is_oracle_common.sql'
+            - wget -O /home/ubuntu/is/is5110/is_oracle_consent.sql 'https://is-5110-dbscripts.s3.amazonaws.com/is_oracle_consent.sql'
+            - wget -O /home/ubuntu/is/is5110/is_oracle_identity.sql 'https://is-5110-dbscripts.s3.amazonaws.com/is_oracle_identity.sql'
+            - wget -O /home/ubuntu/is/is5110/is_postgres.sql 'https://is-5110-dbscripts.s3.amazonaws.com/is_postgres.sql'
             - bash /usr/local/bin/provision_db_is.sh
   PuppetMasterSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
