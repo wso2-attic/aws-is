@@ -259,7 +259,7 @@ Resources:
             - sed -i '/\[master\]/a autosign=true' /etc/puppet/puppet.conf
             - service puppetmaster restart
             - cd /home/ubuntu
-            - !Sub "./wso2-init.sh wso2is-5.11.0"
+            - !Sub "./wso2-update-2.sh"
             - !Sub "/usr/local/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource PuppetMaster --region ${AWS::Region}"
             - !Join
               - ''
@@ -840,6 +840,24 @@ Outputs:
           - DNSName
         - '/services'
     Description: Carbon Server URL
+  MyAccountUrl:
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !GetAtt
+          - WSO2ISLoadBalancer
+          - DNSName
+        - '/myaccount'
+    Description: My Account URL
+  ConsoleUrl:
+    Value: !Join
+      - ''
+      - - 'https://'
+        - !GetAtt
+          - WSO2ISLoadBalancer
+          - DNSName
+        - '/console'
+    Description: Console URL
   ISHttpUrl:
     Value: !Join
       - ''
@@ -963,17 +981,17 @@ Parameters:
 Mappings:
   WSO2PuppetMasterRegionMap:
     ap-southeast-2:
-      Ubuntu1804: ami-0a2861870d74512ea
+      Ubuntu1804: ami-09b869981fbea67bb
     eu-west-1:
-      Ubuntu1804: ami-0463af6f305249b62
+      Ubuntu1804: ami-054867ed960d0375d
     us-east-1:
-      Ubuntu1804: ami-0fa93af33951a2c8b
+      Ubuntu1804: ami-05e85c71f3ba10e9b
     us-east-2:
-      Ubuntu1804: ami-0f380e43ca326a27a
+      Ubuntu1804: ami-0a2fa0ae50487b9c1
     us-west-1:
-      Ubuntu1804: ami-07623f026ab5630b2
+      Ubuntu1804: ami-089b8e786f95a931a
     us-west-2:
-      Ubuntu1804: ami-021934f0ccadab830
+      Ubuntu1804: ami-01d34896c82581270
   WSO2ISAMIRegionMap:
     ap-southeast-2:
       CentOS7: ami-0211f0ecd0e693937
